@@ -1,0 +1,12 @@
+# Isabelle build / editor artifacts
+output/
+*.thy~
+*~
+.DS_Store
+
+# Local heaps / browser info (if generated in-tree)
+heaps/
+browser_info/
+
+# jEdit / Isabelle IDE local state
+.settings/
