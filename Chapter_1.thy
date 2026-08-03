@@ -31,6 +31,34 @@ thm add_02
 (*the keywords "lemma", "theorem", "corollary", "proposition" are essentially synonyms,
 the difference is purely conventional / documentary.*)
 
+text \<open>section 2.2.3 Type list\<close>
 
+(*Occurrences of nonatomic types on the right-hand side of the equal sign
+  must be enclosed in double quotes, as is customary in Isabelle.*)
+(*datatype 'a list = Nil | Cons 'a "'a list"*)
+
+fun app :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "app Nil ys = ys"
+| "app (Cons x xs) ys = Cons x (app xs ys)"
+
+value "app [1::nat, 2] [3, 4]"
+value "app [''a'', ''b''] [''c'']" \<comment> \<open>this is a char list list\<close>
+
+(*
+  this is incorrect, because Cons has type
+  'a \<Rightarrow> 'a list \<Rightarrow> 'a list,
+  it must accept an element as its first argument
+fun rev :: "'a list \<Rightarrow> 'a list" where
+  "rev Nil = Nil"
+| "rev (Cons x xs) = Cons (rev xs) x"
+*)
+
+fun rev :: "'a list \<Rightarrow> 'a list" where
+  "rev Nil = Nil"
+| "rev (Cons x xs) = app (rev xs) (Cons x Nil)"
+
+value "rev [1::nat, 2, 3]"
+value "rev (''hello''::string)"
+value "rev [True, False, True]"
 
 end

@@ -8,10 +8,12 @@ text "
   temporary tests.
 "
 
-(*this does not work,
-  the function does not terminate when b = 0*)
+(*
+  this does not work,
+  the function does not terminate when b = 0
 fun modular_01 :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
   "modular_01 a b = (if a < b then a else modular_01 (a - b) b)"
+*)
 
 (*this works, using pattern-match.
   The Suc b pattern guarantees that the second argument is at least 1*)
