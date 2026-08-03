@@ -26,4 +26,11 @@ lemma add_02: "add m 0 = m"
    apply(auto)
   done
 
+thm add_02
+
+(*the keywords "lemma", "theorem", "corollary", "proposition" are essentially synonyms,
+the difference is purely conventional / documentary.*)
+
+
+
 end

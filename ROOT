@@ -1,6 +1,7 @@
 session Learning_Isabelle = HOL +
   options [document = false]
   theories
-    Sample
+    Tests
+    Chapter_1
   document_files
     "root.tex"
