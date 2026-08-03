@@ -61,4 +61,34 @@ value "rev [1::nat, 2, 3]"
 value "rev (''hello''::string)"
 value "rev [True, False, True]"
 
+
+\<comment> \<open>!!!THE ARRANGEMENT OF STATEMENTS MATTERS!!!\<close>
+lemma app_Nil2 [simp]: "app xs Nil = xs" \<comment> \<open>required by first subgoal in rev_app\<close>
+  apply(induction xs)
+   apply(auto)
+  done
+
+lemma app_assoc [simp]: "app (app xs ys) zs = app xs (app ys zs)"
+  apply(induction xs)
+   apply(auto)
+  done
+
+lemma rev_app [simp]: "rev (app xs ys) = app (rev ys) (rev xs)"
+  apply(induction xs) \<comment> \<open>the second subgoal requires associativity of app\<close>
+   apply(auto)
+  done
+
+(*the purpose of [simp] here is
+  to add this theorem rev_rev to ruleset simplification for future use*)
+theorem rev_rev [simp]: "rev (rev xs) = xs"
+  apply(induction xs) \<comment> \<open>induction on length of the list\<close>
+   apply(auto) \<comment> \<open>solve both goals automatically\<close>
+  done
+
+\<comment> \<open>
+  Summary: rev (rev xs) = xs is proved by induction on xs, but only after
+  three [simp] lemmas: app xs Nil = xs, associativity of app, and
+  rev (app xs ys) = app (rev ys) (rev xs). Each of those is itself by
+  induction + auto; then auto finishes both goals of rev_rev.\<close>
+
 end
