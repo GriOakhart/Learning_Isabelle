@@ -91,4 +91,32 @@ theorem rev_rev [simp]: "rev (rev xs) = xs"
   rev (app xs ys) = app (rev ys) (rev xs). Each of those is itself by
   induction + auto; then auto finishes both goals of rev_rev.\<close>
 
+text \<open>section 2.2.5\<close>
+
+fun my_map :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a list \<Rightarrow> 'b list" where
+  "my_map f Nil = Nil"
+| "my_map f (x # xs) = (f x) # (my_map f xs)"
+
+\<comment> \<open>
+  my_map applies a function f to every element of a list, producing a new list
+  of the results. Empty list maps to empty list; on Cons, apply f to the head
+  and recurse on the tail.
+\<close>
+
+value "my_map (\<lambda>n::nat. n + 1) [0, 1, 2]"
+  \<comment> \<open>result: [1, 2, 3]\<close>
+
+value "my_map even [0::nat, 1, 2, 3]"
+  \<comment> \<open>result: [True, False, True, False]\<close>
+
+value "my_map (\<lambda>x::nat. x * 2) Nil"
+  \<comment> \<open>result: []\<close>
+
+value "my_map rev [[1::nat, 2], [3, 4, 5]]"
+  \<comment> \<open>result: [[2, 1], [5, 4, 3]]\<close>
+
+text \<open>Section 2.2.6: Types int and real\<close>
+
+(*See Tests.thy*)
+
 end
