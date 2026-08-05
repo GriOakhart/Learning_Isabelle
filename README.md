@@ -1,6 +1,6 @@
 # Learning_Isabelle
 
-A small [Isabelle/HOL](https://isabelle.in.tum.de/) project for learning formal proofs, following early chapters of the Isabelle tutorial (types, recursive functions, and induction).
+A small [Isabelle/HOL](https://isabelle.in.tum.de/) project for learning formal proofs, following early chapters of the Isabelle tutorial (types, recursive functions, induction, and exercises).
 
 ## Requirements
 
@@ -25,22 +25,38 @@ isabelle build -D .
 | Path | Role |
 |------|------|
 | `ROOT` | Session definition (`Learning_Isabelle`, based on `HOL`) |
-| `Chapter_1.thy` | Main learning theory: `bool` / `nat`, recursive `conj` and `add`, induction lemma `add_02` |
-| `Tests.thy` | Playground for temporary experiments (e.g. terminating vs non-terminating `modular` definitions) |
+| `Chapter_1.thy` | Main learning theory: `bool`, `nat`, `list`, `my_map`, and related lemmas |
+| `Exercises.thy` | Tutorial exercises (imports `Chapter_1`) |
+| `Tests.thy` | Playground for temporary experiments (`Complex_Main` for `int`/`real`) |
 | `document/root.tex` | LaTeX root (for PDF document generation if enabled; currently `document = false` in `ROOT`) |
 
-Session theories (from `ROOT`): `Tests`, `Chapter_1`.
+Session theories (from `ROOT`): `Tests`, `Chapter_1`, `Exercises`.
 
 ## Content sketch
 
-### `Chapter_1.thy` (sections 2.2.1–2.2.2)
+### `Chapter_1.thy`
 
-- **Type `bool`:** pattern-based `conj`
-- **Type `nat`:** recursive `add`, `value "add 2 3"`, and `lemma add_02: "add m 0 = m"` proved by induction
+| Section | Topics |
+|---------|--------|
+| 2.2.1 Type `bool` | Pattern-based `conj` |
+| 2.2.2 Type `nat` | Recursive `add`, `add_02 [simp]` by induction |
+| 2.2.3 Type `list` | Polymorphic `app` / `rev`; lemmas `app_Nil2`, `app_assoc`, `rev_app`; theorem `rev_rev` |
+| 2.2.5 | Polymorphic `my_map` with example values |
+| 2.2.6 Types `int` and `real` | See `Tests.thy` |
+
+Lemma order matters: `rev_rev` relies on the earlier `[simp]` lemmas for `app` and `rev`.
+
+### `Exercises.thy`
+
+- **Exercise 2.1:** `value` checks contrasting `nat` vs `int` arithmetic (truncated subtraction on `nat`)
+- **Exercise 2.2:** `add_assoc`, `add_comm` (via helper `add_03`), recursive `double`, and `double m = add m m`
 
 ### `Tests.thy`
 
-Scratch space for short-lived experiments. Currently compares remainder-style functions and how pattern-matching on `Suc b` helps Isabelle accept termination.
+Scratch space for short-lived experiments:
+
+- Terminating remainder-style `modular_02` (non-terminating `modular_01` kept commented)
+- `int` / `real` / `nat` conversions and typed `floor` / `ceiling` evaluation under `Complex_Main`
 
 ## Open in Isabelle/jEdit
 
@@ -48,8 +64,9 @@ Scratch space for short-lived experiments. Currently compares remainder-style fu
 isabelle jedit -d . -l Learning_Isabelle Chapter_1.thy
 ```
 
-To open the playground instead:
+Other theories:
 
 ```bash
+isabelle jedit -d . -l Learning_Isabelle Exercises.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
 ```

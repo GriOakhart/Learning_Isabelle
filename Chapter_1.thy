@@ -21,7 +21,7 @@ fun add :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
 
 value "add 2 3"
 
-lemma add_02: "add m 0 = m"
+lemma add_02 [simp]: "add m 0 = m"
   apply(induction m)
    apply(auto)
   done

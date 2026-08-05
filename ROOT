@@ -3,5 +3,6 @@ session Learning_Isabelle = HOL +
   theories
     Tests
     Chapter_1
+    Exercises
   document_files
     "root.tex"
