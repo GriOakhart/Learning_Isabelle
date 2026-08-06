@@ -128,7 +128,7 @@ datatype 'a tree = Tip | Node "'a tree" 'a "'a tree"
 
 fun mirror :: "'a tree \<Rightarrow> 'a tree" where
   "mirror Tip = Tip"
-| "mirror (Node ltree m rtree) = Node (mirror ltree) m (mirror rtree)"
+| "mirror (Node ltree m rtree) = Node (mirror rtree) m (mirror ltree)"
   \<comment> \<open>Parentheses are required: (Node ltree m rtree) groups the constructor
       pattern as a single argument to mirror; (mirror ltree) and (mirror rtree)
       group the recursive calls as arguments to Node.\<close>

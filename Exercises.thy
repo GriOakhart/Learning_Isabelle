@@ -151,4 +151,32 @@ lemma sum_tree_01: "sum_tree tree = sum_list (contents tree)"
   apply(induction tree)
    apply(auto)
   done
+
+text \<open>Exercise 2.7\<close>
+
+fun pre_order :: "'a tree \<Rightarrow> 'a list" where
+  "pre_order Tip = Nil"
+| "pre_order (Node ltree m rtree) = m # (app (pre_order ltree) (pre_order rtree))"
+  \<comment> \<open>pre-order: root, then left subtree, then right subtree\<close>
+
+value "pre_order (Node (Node (Node Tip (4::nat) Tip) 2 Tip) 1 (Node Tip 3 Tip))"
+  \<comment> \<open>"[1, 2, 4, 3]" :: "nat list"\<close>
+
+fun post_order :: "'a tree \<Rightarrow> 'a list" where
+  "post_order Tip = Nil"
+| "post_order (Node ltree m rtree) = app (app (post_order ltree) (post_order rtree)) (m # Nil)"
+  \<comment> \<open>pre-order: left subtree, then right subtree, then root\<close>
+
+value "post_order (Node (Node (Node Tip (4::nat) Tip) 2 Tip) 1 (Node Tip 3 Tip))"
+  \<comment> \<open>"[2, 4, 3, 1]" :: "nat list"\<close>
+
+lemma pre_post: "pre_order (mirror tree) = rev (post_order tree)"
+  apply(induction tree)
+   apply(auto)
+  done
+  \<comment> \<open>Caution: user-defined app/rev (Chapter_1) are not the library's @ / List.rev.
+      Lemmas proved for app (e.g. app_assoc, rev_app) do not apply to @, so this
+      development must stick to app in pre_order/post_order; otherwise auto cannot
+      reuse those simp rules in the induction step.\<close>
+
 end
