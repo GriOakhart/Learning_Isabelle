@@ -100,4 +100,24 @@ lemma double_reverse: "reverse (reverse xs) = xs"
   apply(induction xs)
    apply(auto)
   done
+
+text \<open>Exercise 2.5\<close>
+
+fun sum_upto :: "nat \<Rightarrow> nat" where
+  "sum_upto 0 = 0"
+| "sum_upto (Suc m) = add (sum_upto m) (Suc m)"
+  \<comment> \<open>add is defined by us in Chapter_1.thy, not Idabelle built-in,
+      so we need the following:\<close>
+
+lemma add_04 [simp]: "add m n = m + n"
+  apply(induction m)
+   apply(auto)
+  done
+  \<comment> \<open>or we can directly use + instead of add in the definition of sum_upto\<close>
+value "sum_upto 10" \<comment> \<open>"55" :: "nat"\<close>
+
+theorem sum_formula: "sum_upto n = n * (n + 1) div 2"
+  apply(induction n)
+   apply(auto)
+  done
 end
