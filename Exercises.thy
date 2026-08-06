@@ -120,4 +120,5 @@ theorem sum_formula: "sum_upto n = n * (n + 1) div 2"
   apply(induction n)
    apply(auto)
   done
+
 end

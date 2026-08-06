@@ -122,12 +122,12 @@ text \<open>Section 2.2.6: Types int and real\<close>
 text \<open>Section 2.3 Type and Function Definitions\<close>
 text \<open>Section 2.3.1 Datatypes\<close>
 
-datatype 'a tree = Leaf | Node "'a tree" 'a "'a tree"
-  \<comment> \<open>Leaf and Node are constructors. A tree is either a bare leaf,
+datatype 'a tree = Tip | Node "'a tree" 'a "'a tree"
+  \<comment> \<open>Tip and Node are constructors. A tree is either a bare leaf,
       or a node with three parts: a left subtree, a value, and a right subtree.\<close>
 
 fun mirror :: "'a tree \<Rightarrow> 'a tree" where
-  "mirror Leaf = Leaf"
+  "mirror Tip = Tip"
 | "mirror (Node ltree m rtree) = Node (mirror ltree) m (mirror rtree)"
   \<comment> \<open>Parentheses are required: (Node ltree m rtree) groups the constructor
       pattern as a single argument to mirror; (mirror ltree) and (mirror rtree)
@@ -177,4 +177,44 @@ abbreviation sq' :: "nat \<Rightarrow> nat" where
   Default to definition.
   Reach for abbreviation only when you have a clear, conscious reason
   that the pure syntactic-sugar behaviour is what you want.*)
+
+text \<open>Section 2.3.4 Recursive Functions\<close>
+
+fun div2 :: "nat \<Rightarrow> nat" where
+  "div2 0 = 0"
+| "div2 (Suc 0) = 0"
+| "div2 (Suc (Suc m)) = Suc (div2 m)"
+  \<comment> \<open>div2 is not one equation per datatype constructor of nat (0 and Suc).
+      It has two base cases (0 and Suc 0) and recurses by stripping two Suc
+      constructors at once. fun still proves termination and derives a custom
+      induction rule div2.induct that mirrors this recursion schema — unlike
+      ordinary structural induction on nat, which only has cases for 0 and Suc.\<close>
+
+lemma div2_01: "div2 m = m div 2"
+  apply(induction m rule: div2.induct)
+    apply(auto)
+  done
+  \<comment> \<open>Computation induction: we induct with div2.induct, which follows the
+      recursive definition of div2 (cases 0, Suc 0, and Suc (Suc m) with IH
+      for m), not the structure of the datatype nat. The three goals match the
+      three defining equations, so auto finishes immediately.\<close>
+
+(* Structural induction on the datatype needs a stronger intermediate claim:
+   the plain IH "div2 m = m div 2" is too weak for the step on Suc m, because
+   div2 peels two constructors and would need a fact about the predecessor of m. *)
+lemma div2_02: "div2 m = m div 2"
+  apply(subgoal_tac "div2 m = m div 2 \<and> div2 (Suc m) = Suc m div 2")
+   apply(simp)
+  apply(induction m)
+   apply(auto)
+  done
+  \<comment> \<open>Structural induction on nat: strengthen the goal so each step carries
+      facts about both m and Suc m; then the original claim is the first conjunct.
+      Plain apply(induction m) plus case analysis on m is not enough, because the
+      recursive call is on the value two steps smaller, not on m itself.\<close>
+
+\<comment> \<open>Heuristic: if f's definition is more than one equation per datatype constructor,
+    prove properties of f via f.induct (computation induction). If it is one equation
+    per constructor, structural induction and f.induct amount to the same thing.\<close>
+
 end
