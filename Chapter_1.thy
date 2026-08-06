@@ -119,4 +119,62 @@ text \<open>Section 2.2.6: Types int and real\<close>
 
 (*See Tests.thy*)
 
+text \<open>Section 2.3 Type and Function Definitions\<close>
+text \<open>Section 2.3.1 Datatypes\<close>
+
+datatype 'a tree = Leaf | Node "'a tree" 'a "'a tree"
+  \<comment> \<open>Leaf and Node are constructors. A tree is either a bare leaf,
+      or a node with three parts: a left subtree, a value, and a right subtree.\<close>
+
+fun mirror :: "'a tree \<Rightarrow> 'a tree" where
+  "mirror Leaf = Leaf"
+| "mirror (Node ltree m rtree) = Node (mirror ltree) m (mirror rtree)"
+  \<comment> \<open>Parentheses are required: (Node ltree m rtree) groups the constructor
+      pattern as a single argument to mirror; (mirror ltree) and (mirror rtree)
+      group the recursive calls as arguments to Node.\<close>
+
+lemma mirror_02: "mirror (mirror tree) = tree"
+  apply(induction tree)
+    \<comment> \<open>apply Constructor twice to move Node to outermost\<close>
+   apply(auto)
+  done
+
+(*
+  datatype 'a option = None | Some 'a
+  'a option is a type of optional values: either None (no value),
+  or Some x for some value x of type 'a.
+*)
+
+fun lookup :: "('a * 'b) list \<Rightarrow> 'a \<Rightarrow> 'b option" where
+  "lookup Nil m = None"
+| "lookup ((x, y) # xs) m = (if x = m then (Some y) else lookup xs m)"
+  \<comment> \<open>List of pairs (Cartesian product):
+      write ('a * 'b) list in the type (not 'a * 'b list,
+      which parses as 'a * ('b list));
+      write ((x, y) # xs) in the pattern so (x, y) is one element of the list.\<close>
+
+text \<open>Section 2.3.2 Definitions\<close>
+
+text \<open>
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Non-recursive functions can be defined as Definitions.
+  Such definitions do not allow pattern matching,
+  but only f x_1 \<dots> x_n = t, where f does not occur in t.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\<close>
+definition sq :: "nat \<Rightarrow> nat" where
+  "sq n = n * n"
+
+text \<open>Section 2.3.3 Abbreviations\<close>
+
+text \<open>
+  Abbreviation is only a syntactic sugar.
+  definitions need to be expanded explicitly,
+  whereas abbreviations are already expanded upon parsing.\<close>
+abbreviation sq' :: "nat \<Rightarrow> nat" where
+  "sq' n \<equiv> n * n"
+(*BEST PRACTICE:
+  Default to definition.
+  Reach for abbreviation only when you have a clear, conscious reason
+  that the pure syntactic-sugar behaviour is what you want.*)
 end
