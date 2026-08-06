@@ -121,4 +121,34 @@ theorem sum_formula: "sum_upto n = n * (n + 1) div 2"
    apply(auto)
   done
 
+text \<open>Exercise 2.6\<close>
+
+fun sum_list :: "nat list \<Rightarrow> nat" where
+  "sum_list Nil = 0"
+| "sum_list (x # xs) = x + sum_list xs"
+  \<comment> \<open>definition from the question\<close>
+
+fun contents :: "'a tree \<Rightarrow> 'a list" where
+  "contents Tip = Nil"
+| "contents (Node ltree m rtree) = m # app (contents ltree) (contents rtree)"
+
+value "contents (Node (Node Tip (1::nat) Tip) 2 (Node Tip 3 Tip))"
+
+fun sum_tree :: "nat tree \<Rightarrow> nat" where
+  "sum_tree Tip = 0"
+| "sum_tree (Node ltree m rtree) = m + (sum_tree ltree) + (sum_tree rtree)"
+
+value "sum_tree (Node (Node Tip (1::nat) Tip) 2 (Node Tip 3 Tip))"
+
+lemma sum_list_01 [simp]: "sum_list xs + sum_list ys = sum_list (app xs ys)"
+  apply(induction xs)
+   apply(auto)
+  done
+  \<comment> \<open>required by 2nd goal in the final proof:
+      the relationship of add on sum_list\<close>
+
+lemma sum_tree_01: "sum_tree tree = sum_list (contents tree)"
+  apply(induction tree)
+   apply(auto)
+  done
 end
