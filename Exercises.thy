@@ -179,4 +179,27 @@ lemma pre_post: "pre_order (mirror tree) = rev (post_order tree)"
       development must stick to app in pre_order/post_order; otherwise auto cannot
       reuse those simp rules in the induction step.\<close>
 
+text \<open>Exercise 2.8\<close>
+
+fun intersperse :: "'a \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "intersperse m Nil = Nil"
+| "intersperse m (x # Nil) = x # Nil"
+| "intersperse m (x # xs) = x # m # (intersperse m xs)"
+  \<comment> \<open>more than one equation per Constructor\<close>
+
+value "intersperse (0::nat) [3, 4, 5, 6]"
+  \<comment> \<open>"[3, 0, 4, 0, 5, 0, 6]" :: "nat list"\<close>
+value "intersperse (0::nat) [3]"
+  \<comment> \<open>"[3]" :: "nat list"\<close>
+value "intersperse (0::nat) []"
+  \<comment> \<open>"[]" :: "nat list"\<close>
+
+lemma map_intersperse: "my_map f (intersperse m xs) = intersperse (f m) (my_map f xs)"
+  \<comment> \<open>Mapping f over a list after inserting m between its elements is the same as
+      first mapping f over the elements and then inserting f m between them:
+      f "commutes" with intersperse; the separator is transformed by f as well.\<close>
+  apply(induction xs rule:intersperse.induct)
+      \<comment> \<open>computational induction on definition of intersperse\<close>
+    apply(auto)
+  done
 end
