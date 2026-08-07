@@ -28,6 +28,25 @@ lemma add_02 [simp]: "add m 0 = m"
 
 thm add_02
 
+(* Basic algebraic properties of add (also Exercise 2.2).
+   Placed here so later material in this theory (e.g. itadd) can use them
+   without a cyclic import of Exercises. *)
+
+lemma add_assoc: "add (add x y) z = add x (add y z)"
+  apply(induction x)
+   apply(auto)
+  done
+
+lemma add_03 [simp]: "add m (Suc n) = Suc (add m n)"
+  apply(induction m)
+   apply(auto)
+  done  \<comment> \<open>required by the 2nd subgoal of add_comm, and by itadd_01\<close>
+
+lemma add_comm: "add x y = add y x"
+  apply(induction x)
+   apply(auto)
+  done
+
 (*the keywords "lemma", "theorem", "corollary", "proposition" are essentially synonyms,
 the difference is purely conventional / documentary.*)
 
@@ -264,5 +283,17 @@ text \<open>
   !!!HINT!!!
   Generalize induction by generalizing all free variables
   (except the induction variable itself).\<close>
+
+fun itadd :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
+  "itadd 0 n = n"
+| "itadd (Suc m) n = itadd m (Suc n)"
+
+lemma itadd_01: "itadd m n = add m n"
+  apply(induction m arbitrary: n)
+    \<comment> \<open>generalize the free variable n\<close>
+   apply(auto)
+    \<comment> \<open>needs add_03 (and ultimately add_comm's helper):
+        add m (Suc n) = Suc (add m n)\<close>
+  done
 
 end

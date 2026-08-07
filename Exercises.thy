@@ -5,6 +5,15 @@ begin
 
 text \<open>Exercise 2.1\<close>
 
+text \<open>
+  The associativity and commutativity of @{const add}
+  (and the helper @{thm add_03}) have already been proved in
+  @{file \<open>Chapter_1.thy\<close>} next to the definition of @{const add},
+  so that later proofs in that theory (e.g. @{thm itadd_01}) can use
+  them without a cyclic import of this file.
+  Available lemmas: @{thm add_assoc}, @{thm add_comm}, @{thm add_03}.
+\<close>
+
 value "1 + (2 :: nat)"
   \<comment> \<open>"3" :: "nat"\<close>
 
@@ -21,23 +30,6 @@ value "1 - (2 :: int)"
   \<comment> \<open>"- 1" :: "int"\<close>
 
 text \<open>Exercise 2.2\<close>
-
-(*add is associative*)
-lemma add_assoc: "add (add x y) z = add x (add y z)"
-  apply(induction x)
-   apply(auto)
-  done
-
-lemma add_03 [simp]: "add m (Suc n) = Suc (add m n)"
-  apply(induction m)
-   apply(auto)
-  done  \<comment> \<open>required by the 2nd subgoal in law of commutative\<close>
-
-(*add is commutative*)
-lemma add_comm: "add x y = add y x"
-  apply(induction x)
-   apply(auto)
-  done
 
 (*define double in recursive method*)
 fun double :: "nat \<Rightarrow> nat" where
