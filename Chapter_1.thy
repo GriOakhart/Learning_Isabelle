@@ -217,4 +217,52 @@ lemma div2_02: "div2 m = m div 2"
     prove properties of f via f.induct (computation induction). If it is one equation
     per constructor, structural induction and f.induct amount to the same thing.\<close>
 
+text \<open>Section 2.4 Induction Heuristics\<close>
+
+fun itrev_helper :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "itrev_helper Nil ys = ys"
+| "itrev_helper (x # xs) ys = itrev_helper xs (x # ys)"
+  \<comment> \<open>it reverses its first argument by stacking its elements onto the second argument;
+      tail-recursive: it can be compiled into a loop; no stack\<close>
+
+definition itrev :: "'a list \<Rightarrow> 'a list" where
+  "itrev xs = itrev_helper xs Nil"
+
+value "itrev [(2::nat), 3, 4, 5]"
+  \<comment> \<open>"[5, 4, 3, 2]" :: "nat list"\<close>
+value "itrev (''apple''::string)"
+  \<comment> \<open>"''elppa''" :: "char list"\<close>
+
+(*
+lemma itrev_01: "itrev_helper xs Nil = rev xs"
+  apply(induction xs)
+   apply(auto)
+    goal (1 subgoal):
+      1. \<And>a xs.
+        itrev_helper xs [] = Chapter_1.rev xs \<Longrightarrow> itrev_helper xs [a] = app (Chapter_1.rev xs) [a]
+      the induction assumption is too weak: it specialized to a fixed 2nd argument Nil,
+      but the recursive step calls [a] as the 2nd argument, which is different
+
+lemma itrev_01: "itrev_helper xs ys = app (rev xs) ys"
+  apply(induction xs)
+   apply(auto)
+    goal (1 subgoal):
+      1. \<And>a xs.
+       itrev_helper xs ys = app (Chapter_1.rev xs) ys \<Longrightarrow>
+       itrev_helper xs (a # ys) = app (Chapter_1.rev xs) (a # ys)
+      the 2nd argument on LHS is ys, while the 2nd argument on RHS is (a # ys),
+      which is still weak as above
+*)
+
+lemma itrev_01: "itrev_helper xs ys = app (rev xs) ys"
+  apply(induction xs arbitrary: ys)
+    \<comment> \<open>we need arbitrary on ys\<close>
+   apply(auto)
+  done
+
+text \<open>
+  !!!HINT!!!
+  Generalize induction by generalizing all free variables
+  (except the induction variable itself).\<close>
+
 end
