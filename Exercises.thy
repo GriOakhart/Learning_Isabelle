@@ -194,4 +194,58 @@ lemma map_intersperse: "my_map f (intersperse m xs) = intersperse (f m) (my_map 
       \<comment> \<open>computational induction on definition of intersperse\<close>
     apply(auto)
   done
+
+text \<open>Exercise 2.10\<close>
+
+datatype tree0 = Tip | Node tree0 tree0
+  \<comment> \<open>Reusing Tip/Node is allowed (Isabelle qualifies them as tree0.Tip /
+      tree0.Node vs. tree.Tip / tree.Node), but bare Tip/Node after this
+      point resolve to tree0 and thus shadow the constructors of 'a tree.\<close>
+
+fun nodes :: "tree0 \<Rightarrow> nat" where
+  "nodes Tip = 1"
+  \<comment> \<open>Tip is a leaf and counts as one node; Exercise 2.10 asks for all
+      nodes (inner nodes and leaves), so the base case is 1, not 0.\<close>
+| "nodes (Node ltree rtree) = Suc (add (nodes ltree) (nodes rtree))"
+
+fun explode :: "nat \<Rightarrow> tree0 \<Rightarrow> tree0" where
+  "explode 0 tree = tree"
+| "explode (Suc n) tree = explode n (Node tree tree)"
+
+text \<open>
+  Failed attempt with @{method auto}: after induction, @{method auto} unfolds
+  @{const explode}/@{const nodes} and uses the IH, but then gets stuck on a pure
+  arithmetic equation involving @{text "+"}, @{text "*"} and @{text "2^n"}.
+
+  Comparison:
+  \begin{itemize}
+  \item @{method auto} = light simplification + classical logic (quantifiers,
+        connectives, case splits). It is not ``stronger simp''.
+  \item @{method simp}/@{method simp_all} rewrite with the current simpset.
+  \item @{thm algebra_simps} is a library list of algebraic equations
+        (distributivity, @{text "x + x = 2 * x"}, etc.) that must be
+        \emph{added} to the simpset; neither method loads it by default.
+  \end{itemize}
+  Here the leftover goal is term normalization, not a logic puzzle, so
+  classical search does not help and plain @{method auto} fails.
+\<close>
+lemma siz_of_exploding_auto_fails:
+  "nodes (explode n tree) = Suc (nodes tree) * (2 ^ n) - 1"
+  apply(induction n arbitrary: tree)
+  apply(auto)
+  \<comment> \<open>Stuck, e.g. roughly:
+        2^n + (2^n + (nodes t + nodes t) * 2^n) - 1
+      = 2 * 2^n + nodes t * (2 * 2^n) - 1
+      Needs algebra_simps; auto does not supply them.\<close>
+  oops
+
+lemma siz_of_exploding: "nodes (explode n tree) = Suc (nodes tree) * (2 ^ n) - 1"
+  apply(induction n arbitrary: tree)
+    \<comment> \<open>the 2nd argument for explode in the induction step changes,
+        we must generalize the free variable - tree\<close>
+   apply(simp_all add: algebra_simps)
+    \<comment> \<open>simp_all rewrites with definitions + algebra_simps (tutorial hint);
+        auto simp: algebra_simps would also work, but classical auto is unused.\<close>
+  done
+
 end
