@@ -285,7 +285,27 @@ value "evalp [] 5"
 value "evalp [4, 2, -1, 3] 5"
   \<comment> \<open>"364" :: "int"\<close>
 
+(*
+fun coeffs_add :: "int list \<Rightarrow> int list \<Rightarrow> int list" where
+  "coeffs_add Nil ys = ys"
+| "coeffs_add (x # xs) ys =
+    (case ys of
+       Nil \<Rightarrow> x # xs
+     | y # ys' \<Rightarrow> (x + y) # coeffs_add xs ys')"
+        \<comment> \<open>the case-of version\<close>
+*)
+fun coeffs_add :: "int list \<Rightarrow> int list \<Rightarrow> int list" where
+(*"coeffs_add Nil Nil = Nil"*)  \<comment> \<open>covered by the following patterns\<close>
+| "coeffs_add Nil ys = ys"
+| "coeffs_add xs Nil = xs"
+| "coeffs_add (x # xs) (y # ys) = (x + y) # (coeffs_add xs ys)"
+
 fun coeffs :: "exp \<Rightarrow> int list" where
+  "coeffs Var = [0, 1]"
+| "coeffs (Const x) = [x]"
+| "coeffs (Add x y) = coeffs_add (coeffs x) (coeffs y)"
+    \<comment> \<open>need fun for adding two lists of coefficients\<close>
+| "coeffs (Mult x y) = "
   
 
 end
