@@ -296,16 +296,56 @@ fun coeffs_add :: "int list \<Rightarrow> int list \<Rightarrow> int list" where
 *)
 fun coeffs_add :: "int list \<Rightarrow> int list \<Rightarrow> int list" where
 (*"coeffs_add Nil Nil = Nil"*)  \<comment> \<open>covered by the following patterns\<close>
-| "coeffs_add Nil ys = ys"
+  "coeffs_add Nil ys = ys"
 | "coeffs_add xs Nil = xs"
 | "coeffs_add (x # xs) (y # ys) = (x + y) # (coeffs_add xs ys)"
+
+fun nat_times_list :: "int \<Rightarrow> int list \<Rightarrow> int list" where
+  "nat_times_list m Nil = Nil"
+| "nat_times_list m (y # ys) = (m * y) # (nat_times_list m ys)"
+
+fun coeffs_mult :: "int list \<Rightarrow> int list \<Rightarrow> int list" where
+  "coeffs_mult Nil ys = Nil"
+| "coeffs_mult (x # xs) ys = coeffs_add (nat_times_list x ys) ([0] @ (coeffs_mult xs ys))"
+  \<comment> \<open>(a_0 + x p) q = a_0 q + x (p q):
+      1. p q - recursive call,
+        x (p q) essentially adds an extra o to the head of p q
+      2. nat \<times> nat list - a helper fun
+      3. coeffs_add\<close>
+
+value "coeffs_mult [1, 2, 3] [4, 5, 6]"
+  \<comment> \<open>"[4, 13, 28, 27, 18]" :: "int list"\<close>
 
 fun coeffs :: "exp \<Rightarrow> int list" where
   "coeffs Var = [0, 1]"
 | "coeffs (Const x) = [x]"
 | "coeffs (Add x y) = coeffs_add (coeffs x) (coeffs y)"
     \<comment> \<open>need fun for adding two lists of coefficients\<close>
-| "coeffs (Mult x y) = "
-  
+| "coeffs (Mult x y) = coeffs_mult (coeffs x) (coeffs y)"
+    \<comment> \<open>need fun for multiplying two lists of coefficients\<close>
+
+value "coeffs Var"
+  \<comment> \<open>"[0, 1]" :: "int list" — the polynomial x\<close>
+
+value "coeffs (Const 5)"
+  \<comment> \<open>"[5]" :: "int list" — constant polynomial 5\<close>
+
+value "coeffs (Add (Mult (Const 2) Var) (Const 3))"
+  \<comment> \<open>"[3, 2]" :: "int list" — 3 + 2x\<close>
+
+value "coeffs (Mult (Add Var (Const 1)) (Add Var (Const (-1))))"
+  \<comment> \<open>"[- 1, 0, 1]" :: "int list" — (x + 1)(x - 1) = x^2 - 1\<close>
+
+value "coeffs (Add (Const 0) (Mult Var Var))"
+  \<comment> \<open>"[0, 0, 1]" :: "int list" — 0 + x \<sqdot> x = x^2\<close>
+
+value "evalp (coeffs (Add (Mult (Const 2) Var) (Const 3))) 4"
+  \<comment> \<open>"11" :: "int" — same as eval of that expression at 4\<close>
+
+value "evalp (coeffs (Mult (Add Var (Const 1)) (Add Var (Const (-1))))) 5"
+  \<comment> \<open>"24" :: "int" — same as eval of that expression at 5\<close>
+
+value "evalp (coeffs (Add (Const 0) (Mult Var Var))) (-3)"
+  \<comment> \<open>"9" :: "int" — same as eval of that expression at -3\<close>
 
 end
