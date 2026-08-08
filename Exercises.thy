@@ -248,4 +248,44 @@ lemma siz_of_exploding: "nodes (explode n tree) = Suc (nodes tree) * (2 ^ n) - 1
         auto simp: algebra_simps would also work, but classical auto is unused.\<close>
   done
 
+text \<open>Exercise 2.11\<close>
+
+datatype exp = Var | Const int | Add exp exp | Mult exp exp
+  \<comment> \<open>arithmetic expressions in one variable over integers (type int)\<close>
+
+fun eval :: "exp \<Rightarrow> int \<Rightarrow> int" where
+  "eval Var val = val"
+| "eval (Const x) val = x"
+| "eval (Add x y) val = (eval x val) + (eval y val)"
+| "eval (Mult x y) val = (eval x val) * (eval y val)"
+  \<comment> \<open>eval e x evaluates expression e at integer value x (the single variable)\<close>
+
+value "eval Var 7"
+  \<comment> \<open>"7" :: "int"\<close>
+
+value "eval (Const 5) 99"
+  \<comment> \<open>"5" :: "int" — constants ignore the valuation\<close>
+
+value "eval (Add (Mult (Const 2) Var) (Const 3)) 4"
+  \<comment> \<open>"11" :: "int" — 2 * 4 + 3 = 11 (tutorial-style example)\<close>
+
+value "eval (Mult (Add Var (Const 1)) (Add Var (Const (-1)))) 5"
+  \<comment> \<open>"24" :: "int" — (5 + 1) * (5 + (-1)) = 6 * 4 = 24\<close>
+
+value "eval (Add (Const 0) (Mult Var Var)) (-3)"
+  \<comment> \<open>"9" :: "int" — 0 + (-3) * (-3) = 9\<close>
+
+fun evalp :: "int list \<Rightarrow> int \<Rightarrow> int" where
+  "evalp Nil val = 0"
+| "evalp (x # xs) val = x + (evalp xs val) * val"
+
+value "evalp [] 5"
+  \<comment> \<open>"0" :: "int"\<close>
+
+value "evalp [4, 2, -1, 3] 5"
+  \<comment> \<open>"364" :: "int"\<close>
+
+fun coeffs :: "exp \<Rightarrow> int list" where
+  
+
 end
