@@ -348,4 +348,54 @@ value "evalp (coeffs (Mult (Add Var (Const 1)) (Add Var (Const (-1))))) 5"
 value "evalp (coeffs (Add (Const 0) (Mult Var Var))) (-3)"
   \<comment> \<open>"9" :: "int" — same as eval of that expression at -3\<close>
 
+(*
+  the statement is too weak:
+lemma evalp_add: "evalp (coeffs_add (coeffs e1) (coeffs e2)) x = evalp (coeffs e1) x + evalp (coeffs e2) x"
+  apply(induction e1)
+  apply(simp_all add:algebra_simps)
+*)
+lemma evalp_add [simp]: "evalp (coeffs_add xs ys) val = evalp xs val + evalp ys val"
+  \<comment> \<open>coeffs_add is more complicated than list (more equations),
+      better use computational induction on coeffs_add,
+      rather than structural induction on xs (or ys):
+      apply(induction xs)\<close>
+  apply(induction xs ys rule: coeffs_add.induct)
+    apply(simp_all add: algebra_simps)
+  done
+
+(*Multiplication preserves evaluation*)
+lemma evalp_mult_on_list [simp]: "evalp (nat_times_list a ys) val = a * evalp ys val"
+  apply(induction ys)
+   apply(simp_all add: algebra_simps)
+  done
+
+lemma evalp_mult [simp]: "evalp (coeffs_mult xs ys) val = evalp xs val * evalp ys val"
+  apply(induction xs)
+   apply(simp_all add: algebra_simps)
+  done
+
+lemma evaluation: "evalp (coeffs e) x = eval e x"
+  apply(induction e)
+     apply(simp_all add: algebra_simps)
+      \<comment> \<open>need evalp (coeffs_add (coeffs e1) (coeffs e2)) x = eval e1 x + eval e2 x,
+          generalize to lemma evalp_add\<close>
+      \<comment> \<open>similiarly for coeffs_mult, - generalize to evalp_mult\<close>
+  done
+
+text \<open>
+  Summary — Exercise 2.11:
+  \begin{itemize}
+  \item Type @{typ exp} / @{const eval}: expressions in one variable;
+        @{const evalp}: Horner-style evaluation of coefficient lists.
+  \item @{const coeffs} needs auxiliaries @{const coeffs_add},
+        @{const nat_times_list}, @{const coeffs_mult}.
+  \item Prove list-level helpers first (not expression-level):
+        @{thm evalp_add}, @{thm evalp_mult_on_list}, @{thm evalp_mult}.
+  \item Induct on the \emph{function} for @{const coeffs_add}
+        (@{text "rule: coeffs_add.induct"}), not on the expression type.
+  \item Main theorem @{thm evaluation}: induct on @{text e}; the helpers
+        (as @{text "[simp]"}) plus @{thm algebra_simps} close Add/Mult.
+  \end{itemize}
+\<close>
+
 end
