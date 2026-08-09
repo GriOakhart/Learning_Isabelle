@@ -1,4 +1,4 @@
-theory Exercises
+theory Chapter_2_Ex
   imports Main Chapter_2
 
 begin

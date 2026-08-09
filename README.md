@@ -32,19 +32,19 @@ isabelle build -D .
 |------|------|
 | `ROOT` | Session definition (`Learning_Isabelle`, based on `HOL`) |
 | `Chapter_2.thy` | Main notes for tutorial Chapter 2 (definitions, examples, key lemmas) |
-| `Exercises.thy` | Chapter 2 exercises (imports `Chapter_2`) |
+| `Chapter_2_Ex.thy` | Chapter 2 exercises (imports `Chapter_2`) |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
 | `document/root.tex` | LaTeX root (PDF generation currently off: `document = false` in `ROOT`) |
 
-Session theories (build order from `ROOT`): `Tests`, `Chapter_2`, `Exercises`.
+Session theories (build order from `ROOT`): `Tests`, `Chapter_2`, `Chapter_2_Ex`.
 
-`Exercises` depends on `Chapter_2` (e.g. custom `add`, `app`, `rev`, `tree`, `my_map`).
+`Chapter_2_Ex` depends on `Chapter_2` (e.g. custom `add`, `app`, `rev`, `tree`, `my_map`).
 Algebraic facts about `add` used later in Chapter 2 are proved next to `add` itself, so
-`Chapter_2` never needs to import `Exercises`.
+`Chapter_2` never needs to import `Chapter_2_Ex`.
 
 **Exercise 2.9** (`itadd` / `itadd m n = add m n`) is kept in `Chapter_2.thy` (section 2.4),
-not in `Exercises.thy`. It needs the `add` lemmas and fits the induction-heuristics notes;
-putting it in `Exercises` would force a cyclic import if Chapter 2 also wanted those results.
+not in `Chapter_2_Ex.thy`. It needs the `add` lemmas and fits the induction-heuristics notes;
+putting it in `Chapter_2_Ex` would force a cyclic import if Chapter 2 also wanted those results.
 
 ## Progress — Chapter 2
 
@@ -68,7 +68,7 @@ Recurring proof habits recorded in this theory:
 - Prefer `f.induct` when `fun` equations are not one-per-constructor.
 - Strengthen or generalize the IH when the recursive call changes a secondary argument.
 
-### `Exercises.thy` (Chapter 2 exercises)
+### `Chapter_2_Ex.thy` (Chapter 2 exercises)
 
 | Exercise | Summary |
 |----------|---------|
@@ -94,7 +94,7 @@ Scratch space only — not part of the tutorial narrative:
 ## How to work in this project
 
 1. Read/extend notes in `Chapter_2.thy` along the tutorial sections.
-2. Solve corresponding problems in `Exercises.thy` (it can use definitions from Chapter 2).
+2. Solve corresponding problems in `Chapter_2_Ex.thy` (it can use definitions from Chapter 2).
 3. Park temporary experiments in `Tests.thy` without cluttering the main theories.
 4. Rebuild with `isabelle build -D .` after non-trivial edits.
 
@@ -107,6 +107,6 @@ isabelle jedit -d . -l Learning_Isabelle Chapter_2.thy
 Other entry points:
 
 ```bash
-isabelle jedit -d . -l Learning_Isabelle Exercises.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_2_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
 ```

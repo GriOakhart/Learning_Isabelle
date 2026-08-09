@@ -30,7 +30,7 @@ thm add_02
 
 (* Basic algebraic properties of add (also Exercise 2.2).
    Placed here so later material in this theory (e.g. itadd) can use them
-   without a cyclic import of Exercises. *)
+   without a cyclic import of Chapter_2_Ex. *)
 
 lemma add_assoc: "add (add x y) z = add x (add y z)"
   apply(induction x)
