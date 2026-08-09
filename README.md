@@ -42,6 +42,10 @@ Session theories (build order from `ROOT`): `Tests`, `Chapter_2`, `Exercises`.
 Algebraic facts about `add` used later in Chapter 2 are proved next to `add` itself, so
 `Chapter_2` never needs to import `Exercises`.
 
+**Exercise 2.9** (`itadd` / `itadd m n = add m n`) is kept in `Chapter_2.thy` (section 2.4),
+not in `Exercises.thy`. It needs the `add` lemmas and fits the induction-heuristics notes;
+putting it in `Exercises` would force a cyclic import if Chapter 2 also wanted those results.
+
 ## Progress — Chapter 2
 
 ### `Chapter_2.thy` (tutorial notes)
@@ -56,7 +60,7 @@ Algebraic facts about `add` used later in Chapter 2 are proved next to `add` its
 | **2.3.1** Datatypes | `'a tree`, `mirror`, `lookup` into `'b option` |
 | **2.3.2–2.3.3** | `definition sq` vs `abbreviation sq'` |
 | **2.3.4** Recursive functions | `div2`; computation induction (`div2.induct`) vs structural induction |
-| **2.4** Induction heuristics | Tail-recursive `itrev` / `itadd`; generalizing free variables with `arbitrary` |
+| **2.4** Induction heuristics | Tail-recursive `itrev`; **Exercise 2.9** `itadd` / `itadd_01`; generalizing free variables with `arbitrary` |
 
 Recurring proof habits recorded in this theory:
 
@@ -76,10 +80,9 @@ Recurring proof habits recorded in this theory:
 | **2.6** | Tree `contents` / `sum_tree` related via `sum_list` |
 | **2.7** | `pre_order` / `post_order`; `pre_order (mirror t) = rev (post_order t)` |
 | **2.8** | `intersperse`; commutes with `my_map` via `intersperse.induct` |
+| **2.9** | *(in `Chapter_2.thy`)* iterative `itadd`; `itadd m n = add m n` — moved out of this file to avoid a cyclic import |
 | **2.10** | `tree0`, `explode`; node-count formula needs `algebra_simps` |
 | **2.11** | Expression type `exp`, Horner `evalp`, `coeffs`; prove `evalp (coeffs e) x = eval e x` |
-
-(Exercise 2.9 is not present in this repo.)
 
 ### `Tests.thy`
 
