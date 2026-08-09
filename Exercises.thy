@@ -1,5 +1,5 @@
 theory Exercises
-  imports Main Chapter_1
+  imports Main Chapter_2
 
 begin
 
@@ -8,7 +8,7 @@ text \<open>Exercise 2.1\<close>
 text \<open>
   The associativity and commutativity of @{const add}
   (and the helper @{thm add_03}) have already been proved in
-  @{file \<open>Chapter_1.thy\<close>} next to the definition of @{const add},
+  @{file \<open>Chapter_2.thy\<close>} next to the definition of @{const add},
   so that later proofs in that theory (e.g. @{thm itadd_01}) can use
   them without a cyclic import of this file.
   Available lemmas: @{thm add_assoc}, @{thm add_comm}, @{thm add_03}.
@@ -98,7 +98,7 @@ text \<open>Exercise 2.5\<close>
 fun sum_upto :: "nat \<Rightarrow> nat" where
   "sum_upto 0 = 0"
 | "sum_upto (Suc m) = add (sum_upto m) (Suc m)"
-  \<comment> \<open>add is defined by us in Chapter_1.thy, not Idabelle built-in,
+  \<comment> \<open>add is defined by us in Chapter_2.thy, not Isabelle built-in,
       so we need the following:\<close>
 
 lemma add_04 [simp]: "add m n = m + n"
@@ -166,7 +166,7 @@ lemma pre_post: "pre_order (mirror tree) = rev (post_order tree)"
   apply(induction tree)
    apply(auto)
   done
-  \<comment> \<open>Caution: user-defined app/rev (Chapter_1) are not the library's @ / List.rev.
+  \<comment> \<open>Caution: user-defined app/rev (Chapter_2) are not the library's @ / List.rev.
       Lemmas proved for app (e.g. app_assoc, rev_app) do not apply to @, so this
       development must stick to app in pre_order/post_order; otherwise auto cannot
       reuse those simp rules in the induction step.\<close>

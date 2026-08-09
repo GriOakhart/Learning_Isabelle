@@ -25,16 +25,16 @@ isabelle build -D .
 | Path | Role |
 |------|------|
 | `ROOT` | Session definition (`Learning_Isabelle`, based on `HOL`) |
-| `Chapter_1.thy` | Main learning theory: `bool`, `nat`, `list`, `my_map`, and related lemmas |
-| `Exercises.thy` | Tutorial exercises (imports `Chapter_1`) |
+| `Chapter_2.thy` | Main learning theory: `bool`, `nat`, `list`, `my_map`, trees, and related lemmas |
+| `Exercises.thy` | Tutorial exercises (imports `Chapter_2`) |
 | `Tests.thy` | Playground for temporary experiments (`Complex_Main` for `int`/`real`) |
 | `document/root.tex` | LaTeX root (for PDF document generation if enabled; currently `document = false` in `ROOT`) |
 
-Session theories (from `ROOT`): `Tests`, `Chapter_1`, `Exercises`.
+Session theories (from `ROOT`): `Tests`, `Chapter_2`, `Exercises`.
 
 ## Content sketch
 
-### `Chapter_1.thy`
+### `Chapter_2.thy`
 
 | Section | Topics |
 |---------|--------|
@@ -61,7 +61,7 @@ Scratch space for short-lived experiments:
 ## Open in Isabelle/jEdit
 
 ```bash
-isabelle jedit -d . -l Learning_Isabelle Chapter_1.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_2.thy
 ```
 
 Other theories:

@@ -1,4 +1,4 @@
-theory Chapter_1
+theory Chapter_2
   imports Main
 
 begin
@@ -258,7 +258,7 @@ lemma itrev_01: "itrev_helper xs Nil = rev xs"
    apply(auto)
     goal (1 subgoal):
       1. \<And>a xs.
-        itrev_helper xs [] = Chapter_1.rev xs \<Longrightarrow> itrev_helper xs [a] = app (Chapter_1.rev xs) [a]
+        itrev_helper xs [] = Chapter_2.rev xs \<Longrightarrow> itrev_helper xs [a] = app (Chapter_2.rev xs) [a]
       the induction assumption is too weak: it specialized to a fixed 2nd argument Nil,
       but the recursive step calls [a] as the 2nd argument, which is different
 
@@ -267,8 +267,8 @@ lemma itrev_01: "itrev_helper xs ys = app (rev xs) ys"
    apply(auto)
     goal (1 subgoal):
       1. \<And>a xs.
-       itrev_helper xs ys = app (Chapter_1.rev xs) ys \<Longrightarrow>
-       itrev_helper xs (a # ys) = app (Chapter_1.rev xs) (a # ys)
+       itrev_helper xs ys = app (Chapter_2.rev xs) ys \<Longrightarrow>
+       itrev_helper xs (a # ys) = app (Chapter_2.rev xs) (a # ys)
       the 2nd argument on LHS is ys, while the 2nd argument on RHS is (a # ys),
       which is still weak as above
 *)
