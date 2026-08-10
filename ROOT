@@ -4,5 +4,7 @@ session Learning_Isabelle = HOL +
     Tests
     Chapter_2
     Chapter_2_Ex
+    Chapter_3
+    Chapter_3_Ex
   document_files
     "root.tex"
