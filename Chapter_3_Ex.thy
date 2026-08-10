@@ -65,7 +65,7 @@ lemma ins_02: "ord tree \<Longrightarrow> ord (ins m tree)"
 text \<open>
   @{prop "ord tree \<Longrightarrow> ord (ins m tree)"} — Pure/meta implication.
   Assumptions are available in the proof; usable with rule/erule/drule/frule.
-  Preferred for top-level lemmas and Isar (@{text assumes}/@{text shows} is the same idea).
+  Preferred for top-level lemmas and Isar (@{text "assumes"}/@{text "shows"} is the same idea).
 
   @{prop "ord tree \<longrightarrow> ord (ins m tree)"} — HOL (object) implication, type @{typ bool}.
   Nestable under @{text "\<and>"}, @{text "\<forall>"}, definitions, etc.

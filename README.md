@@ -2,11 +2,13 @@
 
 A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working through the
 [Concrete Semantics](http://concrete-semantics.org/) / Isabelle tutorial material on
-programming and proving — currently focused on **Chapter 2** (types, recursive functions,
-datatypes, and induction).
+programming and proving.
 
-The project is organized so tutorial text lives in one theory, chapter exercises in another,
-and short-lived experiments in a playground theory.
+**Current coverage:** Chapter 2 (types, recursive functions, datatypes, induction) and the
+start of Chapter 3 (sets; ordered trees).
+
+The project is organized so tutorial notes and chapter exercises live in separate theories,
+with a small playground for short-lived experiments.
 
 ## Requirements
 
@@ -31,20 +33,30 @@ isabelle build -D .
 | Path | Role |
 |------|------|
 | `ROOT` | Session definition (`Learning_Isabelle`, based on `HOL`) |
-| `Chapter_2.thy` | Main notes for tutorial Chapter 2 (definitions, examples, key lemmas) |
+| `Chapter_2.thy` | Tutorial notes for Chapter 2 |
 | `Chapter_2_Ex.thy` | Chapter 2 exercises (imports `Chapter_2`) |
+| `Chapter_3.thy` | Tutorial notes for Chapter 3 (sets) |
+| `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Main` and `Chapter_2` for `'a tree`) |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
 | `document/root.tex` | LaTeX root (PDF generation currently off: `document = false` in `ROOT`) |
 
-Session theories (build order from `ROOT`): `Tests`, `Chapter_2`, `Chapter_2_Ex`.
+Session theories (build order from `ROOT`):
 
-`Chapter_2_Ex` depends on `Chapter_2` (e.g. custom `add`, `app`, `rev`, `tree`, `my_map`).
+```text
+Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex
+```
+
+### Dependencies
+
+- `Chapter_2_Ex` → `Chapter_2` (custom `add`, `app`, `rev`, `tree`, `my_map`, …)
+- `Chapter_3_Ex` → `Chapter_2` (reuses `'a tree` from Chapter 2)
+- `Chapter_3` is independent of Chapter 2 (imports `Main` only)
+
 Algebraic facts about `add` used later in Chapter 2 are proved next to `add` itself, so
 `Chapter_2` never needs to import `Chapter_2_Ex`.
 
 **Exercise 2.9** (`itadd` / `itadd m n = add m n`) is kept in `Chapter_2.thy` (section 2.4),
-not in `Chapter_2_Ex.thy`. It needs the `add` lemmas and fits the induction-heuristics notes;
-putting it in `Chapter_2_Ex` would force a cyclic import if Chapter 2 also wanted those results.
+not in `Chapter_2_Ex.thy`, to avoid a cyclic import if Chapter 2 also needed those results.
 
 ## Progress — Chapter 2
 
@@ -80,11 +92,30 @@ Recurring proof habits recorded in this theory:
 | **2.6** | Tree `contents` / `sum_tree` related via `sum_list` |
 | **2.7** | `pre_order` / `post_order`; `pre_order (mirror t) = rev (post_order t)` |
 | **2.8** | `intersperse`; commutes with `my_map` via `intersperse.induct` |
-| **2.9** | *(in `Chapter_2.thy`)* iterative `itadd`; `itadd m n = add m n` — moved out of this file to avoid a cyclic import |
+| **2.9** | *(in `Chapter_2.thy`)* iterative `itadd`; `itadd m n = add m n` — kept out of this file to avoid a cyclic import |
 | **2.10** | `tree0`, `explode`; node-count formula needs `algebra_simps` |
 | **2.11** | Expression type `exp`, Horner `evalp`, `coeffs`; prove `evalp (coeffs e) x = eval e x` |
 
-### `Tests.thy`
+## Progress — Chapter 3
+
+### `Chapter_3.thy` (tutorial notes)
+
+| Section | Topics |
+|---------|--------|
+| **3.2** Sets | How `'a set` is axiomatized (not a datatype); comprehension / membership |
+| | Finiteness as an inductive predicate (`finite` / `infinite`); list `set` and sample lemmas |
+| **3.3** Proof automation | `auto`, `fastforce`, `blast`; `by` as shorthand for `apply`…`done` |
+| **3.3.1** Sledgehammer | Example using `metis` with library facts (e.g. `append_eq_conv_conj`) |
+| **3.3.2** Arithmetic | Linear arithmetic via `arith` |
+
+### `Chapter_3_Ex.thy` (Chapter 3 exercises)
+
+| Exercise | Summary |
+|----------|---------|
+| **3.1** | Tree element-set `set`; BST-style `ord`; insert `ins`; `set (ins m t) = {m} ∪ set t` and `ord t ⟹ ord (ins m t)` |
+| | Notes on Pure `⟹` vs HOL `⟶` for lemma assumptions |
+
+## `Tests.thy`
 
 Scratch space only — not part of the tutorial narrative:
 
@@ -93,8 +124,8 @@ Scratch space only — not part of the tutorial narrative:
 
 ## How to work in this project
 
-1. Read/extend notes in `Chapter_2.thy` along the tutorial sections.
-2. Solve corresponding problems in `Chapter_2_Ex.thy` (it can use definitions from Chapter 2).
+1. Read/extend notes in `Chapter_N.thy` along the tutorial sections.
+2. Solve corresponding problems in `Chapter_N_Ex.thy` (exercises may import earlier chapter theories).
 3. Park temporary experiments in `Tests.thy` without cluttering the main theories.
 4. Rebuild with `isabelle build -D .` after non-trivial edits.
 
@@ -108,5 +139,7 @@ Other entry points:
 
 ```bash
 isabelle jedit -d . -l Learning_Isabelle Chapter_2_Ex.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_3.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
 ```

@@ -77,4 +77,53 @@ value "set ([] :: int list)"
 lemma "finite (set xs)" by simp
 lemma "infinite (UNIV :: nat set)" by simp
 
+text \<open>Section 3.3 Proof Automation\<close>
+
+lemma "\<forall>x. \<exists>y. x = y"
+  by auto
+
+lemma "x \<in> X\<inter>Y \<Longrightarrow> x \<in> X\<union>Y"
+  by auto
+
+text \<open>
+  by proof-method
+  is short for
+  apply proof-method
+  done
+\<close>
+
+(* lemma "(\<forall>xs \<in> A. \<exists>ys. xs = ys @ ys) \<and> (us \<in> A) \<Longrightarrow> \<exists>n. length us = n + n"
+   prefer the following version: *)
+lemma "\<lbrakk>\<forall>xs \<in> A. \<exists>ys. xs = ys @ ys; us \<in> A\<rbrakk> \<Longrightarrow> \<exists>n. length us = n + n"
+  by fastforce
+
+lemma "\<lbrakk> \<forall>x y. T x y \<or> T y x;
+         \<forall>x y. A x y \<and> A y x \<longrightarrow> x = y;
+         \<forall>x y. T x y \<longrightarrow> A x y \<rbrakk>
+      \<Longrightarrow> \<forall>x y. A x y \<longrightarrow> T x y"
+  by blast
+
+text \<open>section 3.3.1 Sledgehammer\<close>
+
+lemma "\<lbrakk>xs @ ys = ys @ xs; length xs = length ys\<rbrakk> \<Longrightarrow> xs = ys"
+  by(metis append_eq_conv_conj)
+
+text "
+  the lemma append_eq_conv_conj is:
+  (xs @ ys = zs) = (xs = take (length xs) zs \<and> ys = drop (length xs) zs)
+
+  from lemma and the first assumption:
+  xs = take (length xs) (ys @ xs)
+  ys = drop (length xs) (ys @ xs)
+  ys = take (length ys) (xs @ ys)
+  xs = drop (length ys) (xs @ ys)
+  again with the first and the second assumption, it's obviously that
+  xs = ys
+"
+
+text \<open>section 3.3.2 Arithmetic\<close>
+
+lemma "\<lbrakk>(a::nat) \<le> x + b; 2 * x < c\<rbrakk> \<Longrightarrow> 2 * a + 1 \<le> 2 * b + c"
+  by arith \<comment> \<open>can be proved directly by simpification\<close>
+
 end
