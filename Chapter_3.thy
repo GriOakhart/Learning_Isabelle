@@ -126,4 +126,66 @@ text \<open>section 3.3.2 Arithmetic\<close>
 lemma "\<lbrakk>(a::nat) \<le> x + b; 2 * x < c\<rbrakk> \<Longrightarrow> 2 * a + 1 \<le> 2 * b + c"
   by arith \<comment> \<open>can be proved directly by simpification\<close>
 
+text \<open>Section 3.4 Single Step Proofs\<close>
+
+text \<open>section 3.4.1 Instantiating Unknowns\<close>
+
+(*the rules*)
+thm refl
+thm conjI
+
+(*instantiating the unknows*)
+thm refl[of "Suc 0"]
+thm conjI[of "False" "a = b"]
+thm conjI[where ?P = "x = y" and ?Q = "y = z"]
+thm conjI[of "True" _]
+
+text \<open>section 3.4.2 Rule Application\<close>
+
+lemma "a = b \<and> False"
+  apply(rule conjI[of "a = b" "False"])
+  oops
+
+(*A step-by-step proof*)
+lemma "True \<and> 1 = 1"
+  apply(rule conjI[of "True" "1 = 1"])
+   apply(rule TrueI)
+  apply(rule refl[of "1"])
+  done
+
+lemma "x = y \<and> y = z \<Longrightarrow> x = z"
+  apply(rule conjE[of "x = y" "y = z"])
+   apply(simp_all)
+  done
+
+text \<open>section 3.4.3 Introduction Rules\<close>
+
+lemma "\<forall>x. \<exists>y. x = y"
+  apply rule
+  apply rule
+  apply rule
+  done
+  \<comment> \<open>Isabelle automatically selects the appropriate rule for the current subgoal.\<close>
+
+lemma "\<lbrakk>(a::nat) \<le> b; b \<le> c; c \<le> d; d \<le> e\<rbrakk> \<Longrightarrow> a \<le> e"
+  by(blast intro: le_trans)
+  \<comment> \<open>le_trans is not an introduction rule by default,
+      because of the disastrous effect on the search space,\<close>
+
+text \<open>section 3.4.4 Forward Proof\<close>
+
+thm conjI[OF refl[of "a"] refl[of "False"]]
+
+text \<open>
+  @{text of} instantiates unknowns in a rule with terms.
+  @{text OF} discharges premises of a rule with other theorems.\<close>
+
+lemma "Suc (Suc (Suc a)) \<le> b \<Longrightarrow> a \<le> b"
+  by(blast dest: Suc_leD)
+
+text \<open>
+  If r is of the form @{text "A \<Longrightarrow> B"}}, the modifier @{text "dest: r"}
+  allows proof search to reason forward with r,
+  i.e., to replace an assumption A' , where A' unifies with A, with
+  the correspondingly instantiated B.\<close>
 end
