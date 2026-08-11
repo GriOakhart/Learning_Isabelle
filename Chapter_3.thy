@@ -162,7 +162,7 @@ text \<open>section 3.4.3 Introduction Rules\<close>
 
 lemma "\<forall>x. \<exists>y. x = y"
   apply rule
-  apply rule
+  apply rule                              
   apply rule
   done
   \<comment> \<open>Isabelle automatically selects the appropriate rule for the current subgoal.\<close>
@@ -188,4 +188,76 @@ text \<open>
   allows proof search to reason forward with r,
   i.e., to replace an assumption A' , where A' unifies with A, with
   the correspondingly instantiated B.\<close>
+
+text \<open>Section 3.5 Inductive Definitions\<close>
+
+text \<open>section 3.5.1 An Example: Even Numbers\<close>
+
+(*inductive definition*)
+inductive ev :: "nat \<Rightarrow> bool" where
+  ev0: "ev 0"
+| evSS: "ev x \<Longrightarrow> ev (Suc (Suc x))"
+
+(*ev 4*)
+lemma "ev (Suc (Suc (Suc (Suc 0))))"
+  apply(rule evSS)
+  apply(rule evSS)
+  apply(rule ev0)
+  done
+
+(*recursive function defiinition*)
+fun evn :: "nat \<Rightarrow> bool" where
+  "evn 0 = True"
+| "evn (Suc 0) = False"
+| "evn (Suc (Suc x)) = evn x"
+
+lemma "ev m \<Longrightarrow> evn m"
+  apply(induction rule: ev.induct) \<comment> \<open>no need for m\<close>
+   apply(simp_all)
+  done
+text \<open>
+  Goal: @{prop "ev m \<Longrightarrow> evn m"}.
+  Proof by rule induction on the assumption @{term "ev m"}
+  (@{text "induction rule: ev.induct"}).  Isabelle finds that
+  occurrence of @{const ev}, so the variable @{term m} need not be
+  named explicitly.  The induction rule is essentially
+
+    @{text "\<lbrakk>ev x; P 0; \<And>n. \<lbrakk>ev n; P n\<rbrakk> \<Longrightarrow> P (Suc (Suc n))\<rbrakk> \<Longrightarrow> P x"}
+
+  with @{text "P = evn"}, which yields two cases:
+
+  1. Base (@{thm ev0}): show @{prop "evn 0"}.
+     By the first equation of @{const evn}, @{prop "evn 0 = True"}.
+
+  2. Step (@{thm evSS}): for arbitrary @{term n}, assume the rule
+     premise @{prop "ev n"} and the induction hypothesis    
+     @{prop "evn n"}; show @{prop "evn (Suc (Suc n))"}.
+     (Here @{term m} has become @{term "Suc (Suc n)"}.)
+     Instantiate the third equation of @{const evn},
+     @{prop "evn (Suc (Suc x)) = evn x"}, at @{text "x = n"}:
+       @{prop "evn (Suc (Suc n)) = evn n"}.
+     Rewrite the goal with this equation (left to right) to obtain
+     @{prop "evn n"}, which is the IH.  Hence
+     @{prop "evn (Suc (Suc n))"}, i.e.\ @{prop "evn m"}.
+
+  Both cases are discharged automatically by @{text simp_all}.\<close>
+
+lemma "evn m \<Longrightarrow> ev m"
+  apply(induction rule: evn.induct)
+(*  apply(simp_all)
+      - goal (2 subgoals):
+       1. ev 0
+       2. \<And>x. ev x \<Longrightarrow> evn x \<Longrightarrow> ev (Suc (Suc x)) *)
+    apply(simp_all add: ev0 evSS)
+  done
+
+thm ev.induct
+thm evn.induct
+
+text \<open>
+  Two directions, two inductions:
+  @{prop "ev m \<Longrightarrow> evn m"} --- rule induction (@{text ev.induct}): 2 cases, no odds;
+  goals about @{const evn}, so @{text simp_all} alone (equations are simp rules).
+  @{prop "evn m \<Longrightarrow> ev m"} --- computation induction (@{text evn.induct}): 3 cases
+  (odd case vacuous); goals about @{const ev}, need @{text "add: ev0 evSS"}.\<close>
 end
