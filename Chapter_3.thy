@@ -260,4 +260,59 @@ text \<open>
   goals about @{const evn}, so @{text simp_all} alone (equations are simp rules).
   @{prop "evn m \<Longrightarrow> ev m"} --- computation induction (@{text evn.induct}): 3 cases
   (odd case vacuous); goals about @{const ev}, need @{text "add: ev0 evSS"}.\<close>
+
+declare ev.intros[simp, intro]
+
+text \<open>The rules of an inductive definition are not simplification rules by default.\<close>
+
+text \<open>section 3.5.2 The Reflexive Transitive Closure\<close>
+
+inductive star :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for f where
+  refl: "star f x x"
+| step: "f x y \<Longrightarrow> star f y z \<Longrightarrow> star f x z"
+
+text \<open>
+  Two readings of the curried type (same object):
+  1. Transformer: @{const star} maps a relation @{term f} to its RTC @{term "star f"}.
+  2. Predicate: @{term "star f x z"} :: @{typ bool} --- an @{term f}-path from @{term x} to @{term z}.
+  Not a predicate \emph{on} @{term f} (@{typ "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"});
+  @{term f} is a parameter, @{term "star f"} the least relation closed under the rules.
+
+  @{thm star.step}: one @{term f}-edge off the front.  If @{term "f x y"} and
+  there is already a path @{term y} to @{term z}, there is a path @{term x} to @{term z}.
+  With @{thm star.refl}, a single edge @{term "f x y"} is a path (use @{term "star f y y"}).
+  The left-oriented shape is why induction on @{term "star f x y"} walks the path from the left.
+\<close>
+
+thm star.induct
+
+lemma star_trans: "star f x y \<Longrightarrow> star f y z \<Longrightarrow> star f x z"
+  apply(induction rule: star.induct)
+    \<comment> \<open>
+      Lemma:  x --star--> y --star--> z.  Induct on the first path; z is fixed.
+      Rule step is  f x y \<Longrightarrow> star f y z \<Longrightarrow> star f x z, but the lemma already
+      uses z (final dest), so the rule's endpoint is renamed za.
+      First path becomes  x --f--> y --star--> za;  za is the old y.
+
+      1. refl:  star f x z \<Longrightarrow> star f x z
+      2. step:  \<And>x y za.
+            f x y                          one front edge
+         \<Longrightarrow> star f y za                    rest of the first path
+         \<Longrightarrow> (star f za z \<Longrightarrow> star f y z)    IH: glue 2nd path onto y\<leadsto>za
+         \<Longrightarrow> (star f za z \<Longrightarrow> star f x z)    goal: same glue, from x\<close>
+   apply(assumption)
+  apply(metis step)  \<comment> \<open>resolution: IH then intro rule @{thm star.step}\<close>
+  (* apply(simp add: step) *)  
+    \<comment> \<open>also works: rewrite @{term "star f x z"} to @{term True} if the premises of @{text step} hold\<close>
+  done
+
+text \<open>
+  Both close the @{text step} case once @{thm star.step} is supplied
+  (@{text step} is not a simp/intro rule by default).
+  @{text metis} treats @{text step} as a clause and chains IH + @{text step}.
+  @{text simp} treats @{text step} as a conditional rewrite
+  (@{term "star f x z"} becomes @{term True} when its premises are solved).
+  Prefer @{text metis} here: the goal is a short first-order combination,
+  and @{text step} is an introduction rule, not an equation.\<close>
+
 end
