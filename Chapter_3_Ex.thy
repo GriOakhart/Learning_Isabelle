@@ -48,8 +48,7 @@ fun ins :: "int \<Rightarrow> int tree \<Rightarrow> int tree" where
 (* Combined form works only with HOL implication:
 lemma "... = ... \<and> (ord tree \<longrightarrow> ord (ins m tree))"  — ok: both sides are HOL bool
 lemma "... = ... \<and> (ord tree \<Longrightarrow> ord (ins m tree))"  — fails: \<Longrightarrow> is Pure/meta, not HOL
-Prefer two separate lemmas (below) so each fact is a clean rule.
-*)
+Prefer two separate lemmas (below) so each fact is a clean rule. *)
 
 lemma ins_01 [simp]: "set (ins m tree) = {m} \<union> set tree"
   apply(induction tree)
@@ -81,6 +80,31 @@ inductive palindrome :: "'a list \<Rightarrow> bool" where
 | singleton: "palindrome [a]"
 | step: "palindrome xs \<Longrightarrow> palindrome (app (a # xs) [a])"
   \<comment> \<open>note: some properties have been proved for app, but not for @\<close>
+
+(*
+  INVALID: fun allows only constructor patterns. app is a defined
+  function, not a constructor of 'a list (those are Nil and #).
+  Contrast evn (Suc (Suc x)) = evn x in Chapter_3: Suc is a constructor,
+  so peeling two Sucs is a legal pattern. There is no constructor that
+  exposes the last element of a list, so
+    palind (app (a # xs) [b]) = ...
+  cannot be a fun equation — writing xs @ [b] fails for the same reason.
+*)
+
+function palind :: "'a list \<Rightarrow> bool" where
+  "palind Nil = True"
+| "palind [a] = True"
+| "palind (a # b # xs) =
+    (a = last (b # xs) \<and> palind (butlast (b # xs)))"
+  by pat_completeness auto
+termination by (relation "measure length") simp_all
+  \<comment> \<open>
+    Same idea as the inductive step: compare the two ends and recurse
+    on the middle. The patterns are the list constructors ([], singleton,
+    length \<ge> 2). The recursive call is on butlast (b # xs), which is not
+    a constructor subterm, so fun cannot prove termination. function plus
+    measure length works: the middle is shorter by 2.
+    Non-recursive alternative: definition palind xs = (rev xs = xs).\<close>
 
 lemma "palindrome xs \<Longrightarrow> rev xs = xs"
   apply(induction rule: palindrome.induct)
