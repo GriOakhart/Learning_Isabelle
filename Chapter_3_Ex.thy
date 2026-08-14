@@ -160,4 +160,19 @@ text \<open>
 
   See Star_Simp_Notes.thy for the full explanation and the experiments.\<close>
 
+text \<open>Exercise 3.4\<close>
+
+inductive iter :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for r where
+  init: "iter r 0 x x"
+| step: "r x y \<Longrightarrow> iter r n y z \<Longrightarrow> iter r (Suc n) x z"
+
+(* lemma "star r x y \<Longrightarrow> iter r n x y" - need quantifier for n *)
+lemma "star r x y \<Longrightarrow> \<exists>n. iter r n x y"
+  (* apply(rule exI) *)
+    \<comment> \<open>should not instantiate n here, witness ?n must differ per case\<close>
+  apply(induction rule: star.induct)
+   apply(metis init)
+  apply(metis step)
+  done
+
 end
