@@ -1,5 +1,5 @@
 theory Chapter_3_Ex
-  imports Main Chapter_2
+  imports Main Chapter_2 Chapter_3
 
 begin
 
@@ -110,5 +110,54 @@ lemma "palindrome xs \<Longrightarrow> rev xs = xs"
   apply(induction rule: palindrome.induct)
     apply(simp_all)
   done
+
+text \<open>Exercise 3.3\<close>
+
+inductive star' :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for r where
+  refl: "star' r x x"
+| step: "star' r x y \<Longrightarrow> r y z \<Longrightarrow> star' r x z"
+
+lemma "star' r x y \<Longrightarrow> star r x y"
+  apply(induction rule: star'.induct)
+   apply(simp_all add: star.intros star_trans)
+    \<comment> \<open>note star_trans has been proved, but need to be added here manually\<close>
+  done
+
+lemma star'_trans: "star' r y z \<Longrightarrow> star' r x y \<Longrightarrow> star' r x z"
+  apply(induction rule: star'.induct)
+   apply(assumption)
+  apply(metis step)
+    \<comment> \<open>note: if th statement is:
+        "star' r x y \<Longrightarrow> star' r y z \<Longrightarrow> star' r x z"
+        then cannot be proved this way. Why?\<close>
+  done
+
+(*Similiarly,*)
+lemma "star r x y \<Longrightarrow> star' r x y"
+  apply(induction rule: star.induct)
+   apply(simp_all add:star'.intros)
+  apply(metis star'.intros star'_trans)
+    \<comment> \<open>step case: from r x y build star' r x y (refl then step),
+        then glue it to star' r y z with star'_trans\<close>
+  done
+
+text \<open>
+  This lemma and @{prop "star' r x y \<Longrightarrow> star r x y"} are exact duals, and so are
+  their proofs: @{const star} grows paths on the left, @{const star'} on the right,
+  so in both directions the induction step hands you a single r-step at the "wrong"
+  end, which is glued on with the respective transitivity lemma plus a singleton path
+  built from refl and step.
+
+  Yet the simp one-liner only closes @{prop "star' r x y \<Longrightarrow> star r x y"}. The reason
+  is not logical but operational: simp solves a conditional rule's premises left to
+  right and can instantiate an unknown midpoint only by unifying a premise with an
+  assumption. @{thm [source] star.step} lists the atomic premise @{prop "r x y"}
+  first, which pins the midpoint down before the recursive premise is attempted.
+  @{thm [source] star'.step} lists the recursive premise first, so simp meets
+  the condition \<open>star' r x ?y\<close> with \<open>?y\<close> unknown and recurses into a runaway
+  search. metis performs proof search with backtracking, so premise order does not
+  matter to it.
+
+  See Star_Simp_Notes.thy for the full explanation and the experiments.\<close>
 
 end
