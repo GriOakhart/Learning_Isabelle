@@ -72,6 +72,19 @@ text \<open>
   For rule-style use: mp/impE; simp/auto/blast usually need no conversion.
 
   Best practice: @{text "\<Longrightarrow>"} (==>) for lemma assumptions; @{text "\<longrightarrow>"} (-->) only
-  when implication is part of a larger HOL formula.
-\<close>
+  when implication is part of a larger HOL formula.\<close>
+
+text \<open>Exercise 3.2\<close>
+
+inductive palindrome :: "'a list \<Rightarrow> bool" where
+  empty: "palindrome Nil"
+| singleton: "palindrome [a]"
+| step: "palindrome xs \<Longrightarrow> palindrome (app (a # xs) [a])"
+  \<comment> \<open>note: some properties have been proved for app, but not for @\<close>
+
+lemma "palindrome xs \<Longrightarrow> rev xs = xs"
+  apply(induction rule: palindrome.induct)
+    apply(simp_all)
+  done
+
 end
