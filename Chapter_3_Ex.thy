@@ -175,4 +175,95 @@ lemma "star r x y \<Longrightarrow> \<exists>n. iter r n x y"
   apply(metis step)
   done
 
+text \<open>Exercise 3.5\<close>
+
+datatype alpha = a | b
+
+(*
+inductive S :: "alpha list \<Rightarrow> bool" where
+  empty: "S Nil"
+| mid: "S xs \<Longrightarrow> S (a # (app xs (b # Nil)))"
+| doub: "S xs \<Longrightarrow> S (app xs xs)"
+
+lemma "S [(a::alpha), b]"
+  using S.mid[OF S.empty]
+  by simp
+
+lemma "S [a, b, a, b]"
+  apply (rule S.doub[where xs="[a, b]", simplified])
+  apply (rule S.mid[where xs="[]", simplified])
+  apply (rule S.empty)
+  done
+
+inductive T :: "alpha list \<Rightarrow> bool" where
+  empty: "T Nil"
+| step: "T xs \<Longrightarrow> T (app xs (a # app xs (b # Nil)))"
+
+lemma "T [a, b, a, a, b, b]"
+  apply(rule T.step[of "[a, b]", simplified])
+  using T.step[of "Nil"]
+  apply(simp add: T.empty)
+  done
+*)
+
+text \<open>
+   Although [a, b, a, a, b, b] is a T-string, it is not an S-string:
+   S.mid yields only aaabbb or aababb at length 6, while S.doub would
+   require an odd-length S-string. Hence the original definitions are
+   incorrect for the intended inclusion T xs \<Longrightarrow> S xs.
+
+   The two Ss and two Ts do not necessarily be identical. They are independent!!! \<close>
+
+inductive S :: "alpha list \<Rightarrow> bool" where
+  empty: "S Nil"
+| mid: "S xs \<Longrightarrow> S (a # (app xs (b # Nil)))"
+| doub: "S xs \<Longrightarrow> S ys \<Longrightarrow> S (app xs ys)"
+
+inductive T :: "alpha list \<Rightarrow> bool" where
+  empty: "T Nil"
+| step: "T xs \<Longrightarrow> T ys \<Longrightarrow> T (app xs (a # app ys (b # Nil)))"
+
+lemma "T xs \<Longrightarrow> S xs"
+  apply(induction rule: T.induct)
+   apply(metis S.empty)
+  apply(metis S.mid S.doub)
+  done
+
+lemma T_app: "T ys \<Longrightarrow> T xs \<Longrightarrow> T (app xs ys)"
+  apply(induction arbitrary: xs rule: T.induct)
+   apply(simp)
+    \<comment> \<open>goal (1 subgoal):
+         1. \<And>xs ys xsa.
+               T xs \<Longrightarrow>
+               (\<And>xsa. T xsa \<Longrightarrow> T (app xsa xs)) \<Longrightarrow>
+               T ys \<Longrightarrow> (\<And>xs. T xs \<Longrightarrow> T (app xs ys)) \<Longrightarrow> T xsa \<Longrightarrow> T (app xsa (app xs (a # app ys [b])))\<close>
+  (* apply(metis T.step app_assoc) *)
+    \<comment> \<open>metis can use an equation in both directions. This finishes the proof. Or:\<close>
+  apply(simp only: app_assoc[symmetric])
+    \<comment> \<open>simp rules are directed rewrites, applied left-to-right only. And app_assoc is directional.\<close>
+  apply(rule T.step)
+    \<comment> \<open>split the regrouped goal into the two premises of T.step\<close>
+   apply(blast)
+    \<comment> \<open>derive T (app xsa xs) from the induction hypothesis and T xsa\<close>
+  apply(assumption)
+    \<comment> \<open>solve the remaining goal with the assumption T ys\<close>
+  done
+
+lemma "S xs \<Longrightarrow> T xs"
+  apply(induction rule: S.induct)
+    apply(metis T.empty)
+   apply(rule T.step[where xs="Nil", simplified])
+    apply(simp_all add: T.empty)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>xs ys. S xs \<Longrightarrow> T xs \<Longrightarrow> S ys \<Longrightarrow> T ys \<Longrightarrow> T (app xs ys)\<close>
+  apply(simp add: T_app)
+  done
+
+text \<open>
+  Summary: Repeated nonterminals in SS and TaTb generate independently, so
+  their Isabelle rules need separate variables. T is included in S directly by
+  rule induction; the converse also needs closure of T under app. Proving that
+  closure requires induction on the right T-string and reverse associativity to
+  match T.step.\<close>
+
 end
