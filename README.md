@@ -4,11 +4,13 @@ A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working thr
 [Concrete Semantics](http://concrete-semantics.org/) / Isabelle tutorial material on
 programming and proving.
 
-**Current coverage:** Chapter 2 (types, recursive functions, datatypes, induction) and the
-start of Chapter 3 (sets; ordered trees).
+**Current coverage:** Chapter 2 (complete) and Chapter 3 through inductive definitions
+(sets, proof automation, single-step proofs, even numbers, reflexive transitive closure)
+plus exercises 3.1–3.5.
 
 The project is organized so tutorial notes and chapter exercises live in separate theories,
-with a small playground for short-lived experiments.
+with a small playground for short-lived experiments and a notes theory for one longer
+simplifier experiment.
 
 ## Requirements
 
@@ -35,22 +37,24 @@ isabelle build -D .
 | `ROOT` | Session definition (`Learning_Isabelle`, based on `HOL`) |
 | `Chapter_2.thy` | Tutorial notes for Chapter 2 |
 | `Chapter_2_Ex.thy` | Chapter 2 exercises (imports `Chapter_2`) |
-| `Chapter_3.thy` | Tutorial notes for Chapter 3 (sets) |
-| `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Main` and `Chapter_2` for `'a tree`) |
+| `Chapter_3.thy` | Tutorial notes for Chapter 3 |
+| `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Chapter_2` and `Chapter_3`) |
+| `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
 | `document/root.tex` | LaTeX root (PDF generation currently off: `document = false` in `ROOT`) |
 
 Session theories (build order from `ROOT`):
 
 ```text
-Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex
+Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Star_Simp_Notes
 ```
 
 ### Dependencies
 
 - `Chapter_2_Ex` → `Chapter_2` (custom `add`, `app`, `rev`, `tree`, `my_map`, …)
-- `Chapter_3_Ex` → `Chapter_2` (reuses `'a tree` from Chapter 2)
 - `Chapter_3` is independent of Chapter 2 (imports `Main` only)
+- `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
+- `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
 
 Algebraic facts about `add` used later in Chapter 2 are proved next to `add` itself, so
 `Chapter_2` never needs to import `Chapter_2_Ex`.
@@ -107,6 +111,9 @@ Recurring proof habits recorded in this theory:
 | **3.3** Proof automation | `auto`, `fastforce`, `blast`; `by` as shorthand for `apply`…`done` |
 | **3.3.1** Sledgehammer | Example using `metis` with library facts (e.g. `append_eq_conv_conj`) |
 | **3.3.2** Arithmetic | Linear arithmetic via `arith` |
+| **3.4** Single-step proofs | Instantiating unknowns with `of` / `where`; `rule`; intro rules; forward proof with `OF` and `dest` |
+| **3.5.1** Even numbers | Inductive `ev` vs recursive `evn`; rule induction vs computation induction |
+| **3.5.2** Reflexive transitive closure | Inductive `star`; two readings of the curried type; `star_trans` (`metis` vs `simp`) |
 
 ### `Chapter_3_Ex.thy` (Chapter 3 exercises)
 
@@ -114,6 +121,20 @@ Recurring proof habits recorded in this theory:
 |----------|---------|
 | **3.1** | Tree element-set `set`; BST-style `ord`; insert `ins`; `set (ins m t) = {m} ∪ set t` and `ord t ⟹ ord (ins m t)` |
 | | Notes on Pure `⟹` vs HOL `⟶` for lemma assumptions |
+| **3.2** | Inductive `palindrome`; `function palind` (constructor patterns vs `app`/`@`); `palindrome xs ⟹ rev xs = xs` |
+| **3.3** | Right-growing `star'`; equivalence with `star`; `star'_trans`; why `simp` closes only one direction |
+| **3.4** | Inductive `iter`; `star r x y ⟹ ∃n. iter r n x y` (do not instantiate `n` before induction) |
+| **3.5** | Grammars `S` / `T` on `{a,b}` lists; independent nonterminals need separate variables; `T ⊆ S` by rule induction, converse via `T_app` |
+
+### `Star_Simp_Notes.thy`
+
+Companion to Exercise 3.3. The two `star`/`star'` directions are logical duals, but
+`simp` solves conditional premises left to right and can instantiate an unknown
+midpoint only by unifying a premise with an assumption. `star.step` lists the atomic
+`r`-premise first, so the midpoint is pinned down; `star'.step` lists the recursive
+premise first and the search can diverge. `metis` backtracks, so premise order does
+not matter. A swapped-premise copy of `star'.step` makes the mirror `simp` one-liner
+succeed.
 
 ## `Tests.thy`
 
@@ -141,5 +162,6 @@ Other entry points:
 isabelle jedit -d . -l Learning_Isabelle Chapter_2_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
+isabelle jedit -d . -l Learning_Isabelle Star_Simp_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
 ```
