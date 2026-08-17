@@ -68,6 +68,28 @@ proof (rule classical)
   with assms show ?thesis by blast
 qed
 
-
+lemma
+  assumes T: "\<forall>x y. T x y \<or> T y x"
+and A: "\<forall>x y. A x y \<and> A y x \<longrightarrow> x = y"
+and TA: "\<forall> x y. T x y \<longrightarrow> A x y"
+and "A x y"
+shows "T x y"
+proof -
+  from T have "T x y \<or> T y x" by blast
+  then show ?thesis
+  proof
+    assume "T x y"
+    thus ?thesis .
+      \<comment> \<open>!!!IMPORTANT!!!
+          "." finishes this case (by assumption). Without it, thus opens a
+          nested proof and next is parsed there, not as the T y x case.\<close>
+  next
+    assume "T y x"
+    with TA have "A y x" by blast
+    with A \<open>A x y\<close> have "x = y" by blast
+      \<comment> \<open>needs A x y as well as A; x = y alone is not the thesis.\<close>
+    with \<open>T y x\<close> show ?thesis by blast
+  qed
+qed
 
 end
