@@ -35,6 +35,27 @@ proof (rule ccontr)
   thus False using \<open>\<not> T x y\<close> by blast
 qed
 
+(*
+  Same argument, streamlined with Chapter 4 connectives:
+  with facts = from facts this (section 4.1.1);
+  ?thesis (section 4.3.1);
+  classical so the last step is show ?thesis
+  rather than deriving T x y and then False.
+*)
+lemma
+  assumes T: "\<forall>x y. T x y \<or> T y x"
+and A: "\<forall>x y. A x y \<and> A y x \<longrightarrow> x = y"
+and TA: "\<forall> x y. T x y \<longrightarrow> A x y"
+and "A x y"
+shows "T x y"
+proof (rule classical)
+  assume "\<not> T x y"
+  with T have "T y x" by blast
+  with TA have "A y x" by blast
+  with A \<open>A x y\<close> have "x = y" by blast
+  with \<open>T y x\<close> show ?thesis by blast
+qed
+
 
 
 end
