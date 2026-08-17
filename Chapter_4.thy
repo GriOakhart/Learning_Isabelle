@@ -153,9 +153,65 @@ Walk-through of ineq_chain_double:
   have "... \<le> n + n"     this = (n \<le> n + n)
   finally                  hidden also: calculation := (1 < n + n)
                            then from calculation
-  show "1 < n + n" .       "." matches the goal against calculation
-\<close>
+  show "1 < n + n" .       "." matches the goal against calculation\<close>
+
+text \<open>Section 4.3 Streamlining Proofs\<close>
+
+text \<open>section 4.3.1 Pattern Matching and Quotations\<close>
+
+(*
+  show formula (is pattern)
+    matches pattern against formula and binds the unknowns (?L, ?R, \<dots>)
+    for later use.  Works with lemma / have / show.
+
+  ?thesis
+    is implicitly matched against the goal of lemma or show.
+
+  let ?t = "some-big-term"
+    binds an unknown to a term; later steps write ?t instead of the term.
+
+  name: "P"     names a fact (a proved theorem)
+  ?X            names a term or formula (not a fact)
+
+  from \<open>P\<close>      quotes a fact by value, using \<open>\<dots>\<close>
+                prefer this when the name would be longer than the fact
+*)
+
+lemma is_pattern_iff:
+  "A \<inter> B = A \<longleftrightarrow> A \<subseteq> B" (is "?L \<longleftrightarrow> ?R")
+proof
+  assume "?L"
+  thus "?R" by blast
+next
+  assume "?R"
+  thus "?L" by blast
+qed
+
+lemma thesis_and_let:
+  fixes xs ys :: "'a list"
+  shows "length (rev xs @ ys) = length xs + length ys"
+proof -
+  let ?r = "rev xs"
+  have "length (?r @ ys) = length ?r + length ys" by simp
+  also have "... = length xs + length ys" by simp
+  finally show ?thesis .
+qed
+
+lemma quote_vs_name:
+  fixes n :: nat
+  assumes "n > 0"
+  shows "n * n > 0"
+proof -
+  have "n > 0" using assms .
+    \<comment> \<open>a name like n_gr_0 would be longer than the fact itself\<close>
+  from \<open>n > 0\<close> show ?thesis by simp
+qed
+
+text \<open>section 4.3.2 moreover\<close>
+
+
 
 end
+
 
 
