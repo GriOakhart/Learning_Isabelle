@@ -56,6 +56,18 @@ proof (rule classical)
   with \<open>T y x\<close> show ?thesis by blast
 qed
 
+(* same contradiction, intermediates left to blast *)
+lemma
+  assumes T: "\<forall>x y. T x y \<or> T y x"
+and A: "\<forall>x y. A x y \<and> A y x \<longrightarrow> x = y"
+and TA: "\<forall> x y. T x y \<longrightarrow> A x y"
+and "A x y"
+shows "T x y"
+proof (rule classical)
+  assume "\<not> T x y"
+  with assms show ?thesis by blast
+qed
+
 
 
 end
