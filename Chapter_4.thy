@@ -209,9 +209,39 @@ qed
 
 text \<open>section 4.3.2 moreover\<close>
 
+(*
+  this         — the latest fact only
+  calculation  — shared register for also and moreover
 
+  also       calculation := trans [OF calculation this]   (compose)
+  moreover   calculation := calculation this              (append)
+  finally    \<equiv> also from calculation
+  ultimately \<equiv> moreover from calculation
+
+  also folds to one fact; moreover grows a list.
+  Do not mix also and moreover in the same block.
+*)
+
+text \<open>section 4.3.3 Local Lemmas\<close>
+
+(* This is simply an extension of the basic `have` construct:
+    have B if name: A_1, ..., A_m for x_1, ..., x_n
+    \<open>proof\<close> *)
+
+lemma
+  fixes a b :: int
+  assumes "b dvd (a + b)"
+  shows "b dvd a"
+proof -
+  have "\<exists>k'. a = b * k'" if asm: "a + b = b * k" for k
+  proof
+    show "a = b * (k - 1)" using asm by (simp add: algebra_simps)
+  qed
+  then show ?thesis using assms by (auto simp add: dvd_def)
+qed
 
 end
+
 
 
 
