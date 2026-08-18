@@ -178,7 +178,7 @@ text \<open>section 4.3.1 Pattern Matching and Quotations\<close>
 *)
 
 lemma is_pattern_iff:
-  "A \<inter> B = A \<longleftrightarrow> A \<subseteq> B" (is "?L \<longleftrightarrow> ?R")
+  "A \<inter> B = A \<longleftrightarrow> A \<subseteq> B" (is "?L \<longleftrightarrow> ?R")  \<comment> \<open>the pattern\<close>
 proof
   assume "?L"
   thus "?R" by blast
@@ -264,6 +264,7 @@ next
   thus ?thesis by simp
 qed
 
+(*a simplified version using case idiom:*)
 lemma "length (tl xs) = length xs - 1"
 proof (cases xs)
   case Nil
@@ -276,6 +277,41 @@ next
   case (Cons y ys)
     \<comment> \<open>\<open>Cons\<close> is the case name; \<open>y\<close> and \<open>ys\<close> name its parameters.\<close>
   thus ?thesis by simp
+qed
+
+section (section 4.4.2 Structural Induction)
+
+lemma "\<Sum>{0..n::nat} = n*(n+1) div 2"
+proof (induction n)
+  show "\<Sum>{0..0::nat} = 0*(0+1) div 2" by simp
+next
+  fix n
+  assume "\<Sum>{0..n::nat} = n*(n+1) div 2"
+  thus "\<Sum>{0..(Suc n)::nat} = (Suc n)*((Suc n)+1) div 2" by simp
+qed
+
+(*simplified version using pattern matching:*)
+lemma "\<Sum>{0..n::nat} = n*(n+1) div 2" (is "?P n")  \<comment> \<open>the pattern\<close>
+proof (induction n)
+  show "?P 0" by simp
+next
+  fix n
+  assume "?P n"
+  thus "?P (Suc n)" by simp
+qed
+
+(*simplified version using case idiom*)
+lemma "\<Sum>{0..n::nat} = n*(n+1) div 2"
+(* proof (cases n) *)
+  \<comment> \<open>Case analysis splits n into 0 and Suc n,
+      but supplies no induction hypothesis for the Suc case.\<close>
+proof (induction n)
+  case 0
+  show ?case by simp
+    \<comment> \<open>?case is set in each case to the required claim\<close>
+next
+  case (Suc n)
+  thus ?case by simp
 qed
 
 end
