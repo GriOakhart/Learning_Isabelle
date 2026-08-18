@@ -103,11 +103,16 @@ term drop
 thm drop_def
 thm drop.simps
 
+(*this is an analog which came up in my mind:*)
 lemma
   fixes m :: nat
   shows "\<exists>p q. m = p + q \<and> (p = q \<or> p = q + 1)"
 proof -
   have "even m \<or> odd m" by simp
+    \<comment> \<open>then show ?thesis proof case-splits this disjunction (disjE):
+        (P \<or> Q) \<Longrightarrow> (P \<Longrightarrow> R) \<Longrightarrow> (Q \<Longrightarrow> R) \<Longrightarrow> R
+        with P = even m, Q = odd m, R = ?thesis.
+        Bare P \<or> Q \<Longrightarrow> R is not the rule.\<close>
   then show ?thesis
   proof
     assume "even m"
@@ -122,6 +127,7 @@ proof -
   qed
 qed
 
+(*the exact lemma required in this exercise:*)
 lemma
   fixes xs :: "'a list"
   shows "\<exists>ys zs. xs = ys @ zs \<and> (length ys = length zs \<or> length ys = length zs + 1)"
@@ -138,6 +144,48 @@ proof -
     then obtain k where "length xs = 2 * k + 1" by (rule oddE)
     then have "xs = (take (k+1) xs) @ (drop (k+1) xs) \<and> (length (take (k+1) xs) = length (drop (k+1) xs) \<or> length (take (k+1) xs) = length (drop (k+1) xs) + 1)" by simp
     then show ?thesis by blast
+  qed
+qed
+
+text \<open>
+  Tutorial Exercise 4.2: same lemma, in the form the author asks for.
+  Witnesses are take/drop (the hint). The two facts are combined with
+  moreover/ultimately as in \<section>4.3.2; ?thesis is \<section>4.3.1.
+  append_take_drop_id, length_take and length_drop are already simp rules,
+  so they must not be added again.
+\<close>
+lemma "\<exists>ys zs. xs = ys @ zs \<and>
+          (length ys = length zs \<or> length ys = length zs + 1)"
+proof -
+  let ?ys = "take ((length xs + 1) div 2) xs"
+  let ?zs = "drop ((length xs + 1) div 2) xs"
+    \<comment> \<open>actually we do not need to split cases to even and odd at all!\<close>
+  have "xs = ?ys @ ?zs"
+    by simp
+  moreover have "length ?ys = length ?zs \<or> length ?ys = length ?zs + 1"
+    by simp arith
+  ultimately show ?thesis by blast
+qed
+
+text \<open>
+  Same lemma, with the justification sledgehammer actually produced.
+  On the bare existential it found nothing; the witnesses must be given.
+  Here proof (without a method) applies the intro rule exI (\<section>4.2),
+  so each show supplies one witness; sledgehammer (cvc5) then closed
+  the remaining goal with "by force".
+\<close>
+lemma "\<exists>ys zs. xs = ys @ zs \<and>
+          (length ys = length zs \<or> length ys = length zs + 1)"
+proof
+  let ?k = "(length xs + 1) div 2"
+  show "\<exists>zs. xs = take ?k xs @ zs \<and>
+          (length (take ?k xs) = length zs \<or>
+           length (take ?k xs) = length zs + 1)"
+  proof
+    show "xs = take ?k xs @ drop ?k xs \<and>
+          (length (take ?k xs) = length (drop ?k xs) \<or>
+           length (take ?k xs) = length (drop ?k xs) + 1)"
+      by force
   qed
 qed
 
