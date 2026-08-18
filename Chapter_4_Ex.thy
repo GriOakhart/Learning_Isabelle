@@ -92,4 +92,40 @@ proof -
   qed
 qed
 
+text \<open>Exercise 4.2\<close>
+
+(*the following built-in functions are needed*)
+term take
+thm take_def
+thm take.simps
+
+term drop
+thm drop_def
+thm drop.simps
+
+lemma
+  fixes m :: nat
+  shows "\<exists>p q. m = p + q \<and> (p = q \<or> p = q + 1)"
+proof -
+  have "even m \<or> odd m" by simp
+  then show ?thesis
+  proof
+    assume "even m"
+    then obtain k where "m = 2 * k" by (rule evenE)
+    then have "m = k + k \<and> (k = k \<or> k = k + 1)" by simp
+    then show ?thesis by blast
+  next
+    assume "odd m"
+    then obtain k where "m = 2 * k + 1" by (rule oddE)
+    then have "m = (k + 1) + k \<and> (k + 1 = k \<or> k + 1 = k + 1)" by simp
+    then show ?thesis by blast
+  qed
+qed
+
+lemma
+  fixes xs :: "'a list"
+  shows "\<exists>ys zs. xs = ys @ zs \<and> (length ys = length zs \<or> length ys = length zs + 1)"
+proof
+
+
 end
