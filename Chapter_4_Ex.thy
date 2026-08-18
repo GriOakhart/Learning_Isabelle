@@ -125,7 +125,20 @@ qed
 lemma
   fixes xs :: "'a list"
   shows "\<exists>ys zs. xs = ys @ zs \<and> (length ys = length zs \<or> length ys = length zs + 1)"
-proof
-
+proof -
+  have "even (length xs) \<or> odd (length xs)" by simp
+  then show ?thesis
+  proof
+    assume "even (length xs)"
+    then obtain k where "length xs = 2 * k" by (rule evenE)
+    then have "xs = (take k xs) @ (drop k xs) \<and> (length (take k xs) = length (drop k xs) \<or> length (take k xs) = length (drop k xs) + 1)" by simp
+    then show ?thesis by blast
+  next
+    assume "odd (length xs)"
+    then obtain k where "length xs = 2 * k + 1" by (rule oddE)
+    then have "xs = (take (k+1) xs) @ (drop (k+1) xs) \<and> (length (take (k+1) xs) = length (drop (k+1) xs) \<or> length (take (k+1) xs) = length (drop (k+1) xs) + 1)" by simp
+    then show ?thesis by blast
+  qed
+qed
 
 end
