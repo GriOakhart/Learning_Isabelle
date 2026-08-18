@@ -279,7 +279,7 @@ next
   thus ?thesis by simp
 qed
 
-section (section 4.4.2 Structural Induction)
+section \<open>Section 4.4.2 Structural Induction\<close>
 
 lemma "\<Sum>{0..n::nat} = n*(n+1) div 2"
 proof (induction n)
@@ -312,6 +312,24 @@ proof (induction n)
 next
   case (Suc n)
   thus ?case by simp
+qed
+
+text \<open>
+  When the induction goal is an implication, each case assumes its premise
+  automatically, and \<open>?case\<close> denotes only the conclusion.
+\<close>
+
+lemma add_right_less_if_less:
+  fixes n m k :: nat
+  shows "n < m \<Longrightarrow> n + k < m + k"
+proof (induction k)
+  case 0
+  \<comment> \<open>\<open>0.prems\<close> is \<open>n < m\<close>; \<open>?case\<close> is only \<open>n + 0 < m + 0\<close>.\<close>
+  from "0.prems" show ?case by simp
+next
+  case (Suc k)
+  \<comment> \<open>\<open>Suc.IH\<close> is an implication, and \<open>Suc.prems\<close> supplies its premise.\<close>
+  from Suc.IH[OF Suc.prems] show ?case by simp
 qed
 
 end
