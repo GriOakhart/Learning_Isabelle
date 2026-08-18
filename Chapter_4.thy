@@ -240,6 +240,44 @@ proof -
   then show ?thesis using assms by (auto simp add: dvd_def)
 qed
 
+text \<open>Section 4.4 Case Analysis and Induction\<close>
+
+text \<open>section 4.4.1 Datatype Case Analysis\<close>
+
+thm tl_def
+
+(*apply-style*)
+lemma "length (tl xs) = length xs - 1"
+  apply(induction xs)
+   apply(simp_all)
+  done
+
+(*Isar-style*)
+lemma "length (tl xs) = length xs - 1"
+proof (cases xs)
+  \<comment> \<open>case analysis on datatype of xs\<close>
+  assume "xs = Nil"
+  thus ?thesis by simp
+next
+  fix y ys
+  assume "xs = y # ys"
+  thus ?thesis by simp
+qed
+
+lemma "length (tl xs) = length xs - 1"
+proof (cases xs)
+  case Nil
+  thus ?thesis by simp
+next
+  (* case "y # ys" - incorrect *)
+    \<comment> \<open>Quotation marks delimit logical terms, not case specifications.\<close>
+  (* case (y # ys) - incorrect *)
+    \<comment> \<open>Parentheses group a case name and its parameter bindings; \<open>#\<close> is term syntax.\<close>
+  case (Cons y ys)
+    \<comment> \<open>\<open>Cons\<close> is the case name; \<open>y\<close> and \<open>ys\<close> name its parameters.\<close>
+  thus ?thesis by simp
+qed
+
 end
 
 
