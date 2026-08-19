@@ -387,6 +387,24 @@ qed
   thus ?case using \<open>evn m\<close> by blast
 qed *)
 
+text \<open>section 4.4.5 Assumption Naming\<close>
+
+(*
+  case name  sets up a fact list also called name, split into:
+
+    name.IH     induction hypotheses
+    name.hyps   other hypotheses of this case in the induction rule
+                (rule name's premises for rule induction; empty for structural)
+    name.prems  instantiated premises of the goal being proved
+                i.e. the A_i when proving [[A_1; ...; A_n]] \<Longrightarrow> A
+
+  induct vs induction: only the naming differs.
+    induction  keeps IH and hyps separate
+    induct     folds IH into hyps
+
+  Index a fact list when the whole list is too coarse:
+    name.IH(2)   name.prems(1-2)
+*)
 
 end
 
