@@ -341,7 +341,7 @@ fun pair_count :: "'a list \<Rightarrow> nat" where
 
 lemma pair_count_le_length:
   "2 * pair_count xs \<le> length xs"
-proof (induction xs rule: pair_count.induct)
+proof (induction rule: pair_count.induct)
   case 1
     \<comment> \<open>the number of equations starts from 1\<close>
   show ?case by simp
@@ -356,6 +356,36 @@ next
         \<open>(1)\<close> may be omitted because this case has exactly one induction hypothesis.\<close>
 qed
 
+text \<open>section 4.4.4 Rule Induction\<close>
+
+inductive ev :: "nat \<Rightarrow> bool" where
+  ev0: "ev 0"
+| evSS: "ev m \<Longrightarrow> ev (Suc (Suc m))"
+
+fun evn :: "nat \<Rightarrow> bool" where
+  "evn 0 = True"
+| "evn (Suc 0) = False"
+| "evn (Suc (Suc m)) = evn m"
+
+(*the Isar-style based on rules*)
+lemma "ev m \<Longrightarrow> evn m"
+proof (induction rule: ev.induct)
+  case ev0
+    \<comment> \<open>let ?case = "evn 0"\<close>
+  show ?case by simp
+next
+  case evSS  \<comment> \<open>m is not needed explicitly here\<close>
+    \<comment> \<open>fix m
+        assume evSS: "ev m" - the premise of the rule \<open>ev.evSS\<close> (\<open>evSS.hyps\<close>)
+                     "evn m" - the induction hypothesis for that premise (\<open>evSS.IH\<close>)
+        let ?case = "evn (Suc (Suc m))"\<close>
+  thus ?case by simp
+qed
+(* next
+  case (evSS m)  <-- in this case m is needed explicitly
+  have "evn(Suc(Suc m)) = evn m" by simp
+  thus ?case using \<open>evn m\<close> by blast
+qed *)
 
 
 end
