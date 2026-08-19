@@ -332,6 +332,32 @@ next
   from Suc.IH[OF Suc.prems] show ?case by simp
 qed
 
+text \<open>section 4.4.3 Computation Induction\<close>
+
+fun pair_count :: "'a list \<Rightarrow> nat" where
+  "pair_count [] = 0"
+| "pair_count [x] = 0"
+| "pair_count (x # y # xs) = Suc (pair_count xs)"
+
+lemma pair_count_le_length:
+  "2 * pair_count xs \<le> length xs"
+proof (induction xs rule: pair_count.induct)
+  case 1
+    \<comment> \<open>the number of equations starts from 1\<close>
+  show ?case by simp
+next
+  case (2 x)
+  show ?case by simp
+next
+  case (3 x y xs)
+  (* thus ?case by simp, or: *)
+  from "3.IH"(1) show ?case by simp
+    \<comment> \<open>\<open>"3.IH"(1)\<close> selects the first induction hypothesis of case 3;
+        \<open>(1)\<close> may be omitted because this case has exactly one induction hypothesis.\<close>
+qed
+
+
+
 end
 
 
