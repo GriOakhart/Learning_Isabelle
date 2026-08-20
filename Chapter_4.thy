@@ -408,7 +408,7 @@ text \<open>section 4.4.5 Assumption Naming\<close>
 
 text \<open>section 4.4.6 Rule Inversion\<close>
 
-lemma "ev m \<Longrightarrow> ev (m - 2)"
+lemma ev_inver: "ev m \<Longrightarrow> ev (m - 2)"
 proof -
   assume "ev m"
   (* hence "ev (m - 2)"  - "hence" is "from this have", we need "show" to close *)
@@ -423,6 +423,42 @@ proof -
   qed
 qed
 
+lemma not_ev1: "\<not> ev (Suc 0)"
+proof
+  assume "ev (Suc 0)"
+  then show False by cases
+    \<comment> \<open>rule inversion: \<open>Suc 0\<close> unifies with neither \<open>0\<close> nor \<open>Suc (Suc m)\<close>,
+        so \<open>cases\<close> leaves no subgoals and the impossible assumption is refuted\<close>
+    \<comment> \<open>we can prove anything from "ev (Suc 0)"\<close>
+qed
+
+(* lemma "\<not>\<not> ev (Suc 0)" - unprovable *)
+  \<comment> \<open>In HOL \<open>\<not>\<not>P = P\<close>, so this claims \<open>ev (Suc 0)\<close> itself, which is
+      false: we just proved \<open>\<not> ev (Suc 0)\<close>.
+      "From \<open>ev (Suc 0)\<close> anything follows" only works when \<open>ev (Suc 0)\<close>
+      is an assumption (left of \<open>\<Longrightarrow>\<close>); here it is the conclusion,
+      so we would have to actually establish it.
+      Concretely, \<open>proof\<close> applies \<open>notI\<close>, leaving
+        assume "\<not> ev (Suc 0)" show False
+      but \<open>\<not> ev (Suc 0)\<close> is true, so \<open>False\<close> can never be derived.\<close>
+
+(*Exercise:*)
+lemma "\<not> ev (Suc (Suc (Suc 0)))"
+proof
+  assume "ev (Suc (Suc (Suc 0)))"
+  (* hence "ev (Suc 0)" by (simp add: ev_inver) - fails *)
+    \<comment> \<open>as a simp rule, \<open>ev_inver\<close> rewrites terms of the shape \<open>ev (?m - 2)\<close>;
+        the goal \<open>ev (Suc 0)\<close> does not match that pattern, and simp will not
+        invert the subtraction to find \<open>?m = Suc (Suc (Suc 0))\<close>.
+        Instead, apply \<open>ev_inver\<close> forward to the fact, then simplify:\<close>
+  hence "ev (Suc (Suc (Suc 0)) - 2)" by (rule ev_inver)
+  hence "ev (Suc 0)" by simp
+  thus False by cases
+qed
+  \<comment> \<open>NOTE!!
+      Matching is syntactic, not semantic: \<open>Suc (Suc m)\<close> and \<open>m - 2\<close> are
+      related by arithmetic but are different term shapes, so a simp rule for
+      \<open>ev (?m - 2)\<close> will not fire on \<open>ev (Suc 0)\<close>. Related \<noteq> same pattern.\<close>
 end
 
 
