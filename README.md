@@ -39,6 +39,9 @@ isabelle build -D .
 | `Chapter_2_Ex.thy` | Chapter 2 exercises (imports `Chapter_2`) |
 | `Chapter_3.thy` | Tutorial notes for Chapter 3 |
 | `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Chapter_2` and `Chapter_3`) |
+| `Chapter_4.thy` | Tutorial notes for Chapter 4 |
+| `Chapter_4_Ex.thy` | Chapter 4 exercises |
+| `Rule_Induction_Notes.thy` | What rule induction is: last lemma of 4.4.7, least fixed points, computation induction |
 | `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
 | `document/root.tex` | LaTeX root (PDF generation currently off: `document = false` in `ROOT`) |
@@ -46,7 +49,7 @@ isabelle build -D .
 Session theories (build order from `ROOT`):
 
 ```text
-Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Star_Simp_Notes
+Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_4 → Chapter_4_Ex → Rule_Induction_Notes → Star_Simp_Notes
 ```
 
 ### Dependencies
@@ -55,6 +58,7 @@ Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Star_Sim
 - `Chapter_3` is independent of Chapter 2 (imports `Main` only)
 - `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
 - `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
+- `Rule_Induction_Notes` → `Chapter_4` (`ev`, `evn`, `ev.induct`)
 
 Algebraic facts about `add` used later in Chapter 2 are proved next to `add` itself, so
 `Chapter_2` never needs to import `Chapter_2_Ex`.
@@ -126,6 +130,19 @@ Recurring proof habits recorded in this theory:
 | **3.4** | Inductive `iter`; `star r x y ⟹ ∃n. iter r n x y` (do not instantiate `n` before induction) |
 | **3.5** | Grammars `S` / `T` on `{a,b}` lists; independent nonterminals need separate variables; `T ⊆ S` by rule induction, converse via `T_app` |
 
+### `Rule_Induction_Notes.thy`
+
+Companion to section 4.4.7 of `Chapter_4.thy`. Rule induction is the elimination
+principle for the least fixed point of the operator assembled from the
+introduction rules (shown concretely as `ev_Φ` for `ev`). Isabelle writes
+`I.induct` by keeping each rule's side conditions and `hyps`, and adding an IH
+for every recursive premise — which is why the `evSS` induction case has two
+assumptions while the introduction rule has one. Computation induction is the
+same idea for a `fun`: cases follow equations, IHs follow recursive calls, and
+the induction ranges over the whole domain. For `ev (Suc m) ⟹ ¬ ev m`, `P` is
+not the whole lemma but the generalized conclusion `odd_pred`;
+`induction "Suc m" arbitrary: m` inlines that generalization.
+
 ### `Star_Simp_Notes.thy`
 
 Companion to Exercise 3.3. The two `star`/`star'` directions are logical duals, but
@@ -162,6 +179,8 @@ Other entry points:
 isabelle jedit -d . -l Learning_Isabelle Chapter_2_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_4.thy
+isabelle jedit -d . -l Learning_Isabelle Rule_Induction_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Star_Simp_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
 ```

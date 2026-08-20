@@ -459,6 +459,32 @@ qed
       Matching is syntactic, not semantic: \<open>Suc (Suc m)\<close> and \<open>m - 2\<close> are
       related by arithmetic but are different term shapes, so a simp rule for
       \<open>ev (?m - 2)\<close> will not fire on \<open>ev (Suc 0)\<close>. Related \<noteq> same pattern.\<close>
+
+text \<open>section 4.4.7 Advanced Rule Induction\<close>
+
+thm ev.inducts
+
+lemma "ev (Suc m) \<Longrightarrow> \<not> ev m"
+proof (induction "Suc m" arbitrary: m rule: ev.induct)
+  \<comment> \<open>goal (1 subgoal):
+       1. \<And>m. ev m \<Longrightarrow> (\<And>ma. m = Suc ma \<Longrightarrow> \<not> ev ma) \<Longrightarrow> \<not> ev (Suc m)\<close>
+  fix n assume IH: "\<And>m. n = Suc m \<Longrightarrow> \<not> ev m"
+  show "\<not> ev (Suc n)"
+  proof
+    assume "ev (Suc n)"
+    thus False
+    proof cases
+      fix k assume "n = Suc k" "ev k"
+      thus False using IH by auto
+    qed
+  qed
+qed
+
+text \<open>
+  What @{text P} is here, how @{text ev.induct} is obtained from the
+  introduction rules, and the least-fixed-point / computation-induction
+  reading of rule induction: @{file \<open>Rule_Induction_Notes.thy\<close>}.
+\<close>
 end
 
 

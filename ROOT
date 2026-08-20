@@ -8,6 +8,7 @@ session Learning_Isabelle = HOL +
     Chapter_3_Ex
     Chapter_4
     Chapter_4_Ex
+    Rule_Induction_Notes
     Star_Simp_Notes
   document_files
     "root.tex"
