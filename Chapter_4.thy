@@ -406,6 +406,23 @@ text \<open>section 4.4.5 Assumption Naming\<close>
     name.IH(2)   name.prems(1-2)
 *)
 
+text \<open>section 4.4.6 Rule Inversion\<close>
+
+lemma "ev m \<Longrightarrow> ev (m - 2)"
+proof -
+  assume "ev m"
+  (* hence "ev (m - 2)"  - "hence" is "from this have", we need "show" to close *)
+  thus "ev (m - 2)"
+  proof cases
+    case ev0
+    thus ?thesis by (simp add: ev.ev0)
+      \<comment> \<open>\<open>?case\<close> is only bound under \<open>induction\<close>; rule inversion uses \<open>?thesis\<close>.\<close>
+  next
+    case evSS
+    thus ?thesis by (simp)
+  qed
+qed
+
 end
 
 
