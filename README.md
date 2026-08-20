@@ -4,13 +4,13 @@ A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working thr
 [Concrete Semantics](http://concrete-semantics.org/) / Isabelle tutorial material on
 programming and proving.
 
-**Current coverage:** Chapter 2 (complete) and Chapter 3 through inductive definitions
-(sets, proof automation, single-step proofs, even numbers, reflexive transitive closure)
-plus exercises 3.1–3.5.
+**Current coverage:** Chapters 2–3 complete; Chapter 4 through section 4.4.7 (Isar
+style, case analysis, structural / computation / rule induction, rule inversion,
+advanced rule induction) plus exercises 4.1–4.2.
 
 The project is organized so tutorial notes and chapter exercises live in separate theories,
-with a small playground for short-lived experiments and a notes theory for one longer
-simplifier experiment.
+with a small playground for short-lived experiments and companion note theories for
+longer digressions (rule induction, `star`/`star'` and `simp`).
 
 ## Requirements
 
@@ -39,7 +39,7 @@ isabelle build -D .
 | `Chapter_2_Ex.thy` | Chapter 2 exercises (imports `Chapter_2`) |
 | `Chapter_3.thy` | Tutorial notes for Chapter 3 |
 | `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Chapter_2` and `Chapter_3`) |
-| `Chapter_4.thy` | Tutorial notes for Chapter 4 |
+| `Chapter_4.thy` | Tutorial notes for Chapter 4 (Isar) |
 | `Chapter_4_Ex.thy` | Chapter 4 exercises |
 | `Rule_Induction_Notes.thy` | What rule induction is: last lemma of 4.4.7, least fixed points, computation induction |
 | `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
@@ -57,6 +57,7 @@ Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_
 - `Chapter_2_Ex` → `Chapter_2` (custom `add`, `app`, `rev`, `tree`, `my_map`, …)
 - `Chapter_3` is independent of Chapter 2 (imports `Main` only)
 - `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
+- `Chapter_4` and `Chapter_4_Ex` are independent of earlier chapters (import `Main` only; redefine `ev` / `evn` locally)
 - `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
 - `Rule_Induction_Notes` → `Chapter_4` (`ev`, `evn`, `ev.induct`)
 
@@ -130,6 +131,35 @@ Recurring proof habits recorded in this theory:
 | **3.4** | Inductive `iter`; `star r x y ⟹ ∃n. iter r n x y` (do not instantiate `n` before induction) |
 | **3.5** | Grammars `S` / `T` on `{a,b}` lists; independent nonterminals need separate variables; `T ⊆ S` by rule induction, converse via `T_app` |
 
+## Progress — Chapter 4
+
+### `Chapter_4.thy` (tutorial notes)
+
+| Section | Topics |
+|---------|--------|
+| **4.1** Isar by example | Cantor diagonalization; structured proofs |
+| **4.1.1** | `this` / `then` / `hence` / `thus`; `using` / `with` |
+| **4.1.2** | Structured lemmas: `fixes`, `assumes`, `shows`; null method `proof -` |
+| **4.2** Proof patterns | Forward reasoning from `∃` via `obtain` |
+| **4.2.2** | Equation / inequation chains with `also` / `finally` / `...`; `calculation` register |
+| **4.3.1** | Pattern matching `(is "?L …")`, `?thesis`, `let ?t = …`, fact quotations `‹…›` |
+| **4.3.2** | `moreover` / `ultimately` vs `also` / `finally` |
+| **4.3.3** | Local lemmas: `have … if … for …` |
+| **4.4.1** | Datatype case analysis: `cases` and the `case` idiom (`Nil` / `Cons`) |
+| **4.4.2** | Structural induction in Isar; `?case`; implications and `case.prems` / `IH` |
+| **4.4.3** | Computation induction (`pair_count.induct`); numbered cases and `"3.IH"(1)` |
+| **4.4.4** | Rule induction for inductive `ev` vs recursive `evn` |
+| **4.4.5** | Assumption naming: `.IH` / `.hyps` / `.prems`; `induction` vs `induct` |
+| **4.4.6** | Rule inversion (`cases` on `ev`); syntactic vs semantic simp matching |
+| **4.4.7** | Advanced rule induction: `ev (Suc m) ⟹ ¬ ev m` with `arbitrary`; see `Rule_Induction_Notes.thy` |
+
+### `Chapter_4_Ex.thy` (Chapter 4 exercises)
+
+| Exercise | Summary |
+|----------|---------|
+| **4.1** | Totality / antisymmetry style lemma on `T` and `A`; several Isar styles (`ccontr`, `classical`, `with`, case split with `next` vs `.`) |
+| **4.2** | Split a list into nearly equal halves via `take` / `drop`; even/odd case split, then `moreover`/`ultimately`, then nested `exI` with `force` |
+
 ### `Rule_Induction_Notes.thy`
 
 Companion to section 4.4.7 of `Chapter_4.thy`. Rule induction is the elimination
@@ -180,6 +210,7 @@ isabelle jedit -d . -l Learning_Isabelle Chapter_2_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_4_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Rule_Induction_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Star_Simp_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
