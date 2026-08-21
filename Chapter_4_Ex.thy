@@ -189,4 +189,27 @@ proof
   qed
 qed
 
+text \<open>Exercise 4.3\<close>
+
+inductive ev :: "nat \<Rightarrow> bool" where
+  ev0: "ev 0"
+| evSS: "ev m \<Longrightarrow> ev (Suc (Suc m))"
+
+lemma
+  assumes a: "ev (Suc (Suc n))"
+  shows "ev n"
+(* proof cases
+     case ev0 *)
+    \<comment> \<open>\<open>proof cases\<close> at the top would invert the goal @{prop "ev n"},
+        not assumption @{text a}.  Rule inversion needs the inverted
+        fact as input: @{text "from a"} feeds @{text a} into @{text cases}.\<close>
+proof -
+  from a show "ev n"
+  proof cases
+    case evSS
+    thus ?thesis by simp
+  qed
+qed
+
+
 end
