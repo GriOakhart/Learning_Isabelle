@@ -195,7 +195,7 @@ inductive ev :: "nat \<Rightarrow> bool" where
   ev0: "ev 0"
 | evSS: "ev m \<Longrightarrow> ev (Suc (Suc m))"
 
-lemma
+lemma ev_inver_suc:
   assumes a: "ev (Suc (Suc n))"
   shows "ev n"
 (* proof cases
@@ -211,5 +211,29 @@ proof -
   qed
 qed
 
+text \<open>Exercise 4.4\<close>
+
+lemma "\<not> ev (Suc (Suc (Suc 0)))"
+proof
+  assume "ev (Suc (Suc (Suc 0)))"
+  hence "ev (Suc 0)" by (rule ev_inver_suc)
+  thus "False" by cases
+qed
+
+(*former lemma is not needed:*)
+lemma "\<not> ev (Suc (Suc (Suc 0)))"
+proof
+  assume "ev (Suc (Suc (Suc 0)))"
+  thus False
+  proof cases
+    \<comment> \<open>first variant: apply @{text ev_inver_suc}, then invert
+        @{prop "ev (Suc 0)"}.  Here @{text cases} inverts the
+        assumption itself; @{text ev0} is impossible.\<close>
+    case evSS
+      \<comment> \<open>already @{prop "ev (Suc 0)"}, the conclusion of
+          @{text ev_inver_suc}, so that lemma is not needed.\<close>
+    thus False by cases
+  qed
+qed
 
 end
