@@ -236,4 +236,43 @@ proof
   qed
 qed
 
+text \<open>Exercise 4.5\<close>
+
+inductive star :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for f where
+  refl: "star f x x"
+| step: "f x y \<Longrightarrow> star f y z \<Longrightarrow> star f x z"
+
+inductive iter :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for r where
+  init: "iter r 0 x x"
+| step: "r x y \<Longrightarrow> iter r n y z \<Longrightarrow> iter r (Suc n) x z"
+
+thm iter.inducts
+
+lemma
+  fixes n :: nat
+  assumes "iter r n x y"
+  shows "star r x y"
+(* proof (induction rule: iter.induct) *)
+    \<comment> \<open>rule induction needs the iter hook in the goal or chained in;
+        assumes leaves it in the context, so the method cannot apply.\<close>
+proof -
+  from assms show ?thesis
+  proof (induction rule: iter.induct)
+    case (init x)
+    show ?case by (rule refl)  \<comment> \<open>not shadowed\<close>
+  next
+    case (step x y n z)
+    (* thus ?case by (rule step) *)
+        \<comment> \<open>case (step ...) rebinds step to the case facts, which do
+            not conclude ?case; also shadows star.step.  iter.step
+            concludes iter, not star.\<close>
+    (* thus ?case by (rule star.step) *)
+        \<comment> \<open>star.step wants r x y then star r y z; thus feeds all of
+            this, with iter r n y z in between, so OF fails.\<close>
+    from this(1, 3) show ?case by (rule star.step)
+        \<comment> \<open>we should only pick the 1st and 3rd from this, strictly\<close>
+    (* from step.hyps(1) step.IH show ?case by (rule star.step) - better*)
+  qed
+qed
+
 end
