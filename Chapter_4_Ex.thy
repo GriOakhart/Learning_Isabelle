@@ -338,6 +338,7 @@ proof -
     next
       assume noteq: "x \<noteq> u"
       from this Cons.prems have "x \<in> elems us" by simp
+        \<comment> \<open>Note how we call the two Cons facts here and below\<close>
       then obtain ys zs where "us = ys @ x # zs" "x \<notin> elems ys"
         using Cons.IH by blast
         \<comment> \<open>IH splits @{text us}, not @{text "u # us"}.  Prepend @{text u}
@@ -347,6 +348,36 @@ proof -
       with noteq have "u # us = (u # ys) @ x # zs \<and> x \<notin> elems (u # ys)" by simp
         \<comment> \<open>Be careful about what is the new "ys"\<close>
       thus ?case by blast
+    qed
+  qed
+qed
+
+(*A cleaner proof for the Cons case:*)
+lemma "x \<in> elems xs \<Longrightarrow> \<exists>ys zs. xs = ys @ x # zs \<and> x \<notin> elems ys" (is "?P \<Longrightarrow> ?Q")
+proof -
+  assume ?P thus ?Q
+  proof (induction xs)
+    case Nil
+    thus ?case by simp
+      \<comment> \<open>from assumption infer False, then anything\<close>
+  next
+    case (Cons u us)
+    show ?case
+      \<comment> \<open>show, not thus: otherwise cases is fed Cons.IH / Cons.prems.\<close>
+    proof (cases "x = u")
+      \<comment> \<open>@{text True} / @{text False} on the term,
+          not @{text disjE} on a manufactured @{text "x = u \<or> x \<noteq> u"}.\<close>
+      case True
+      then have "u # us = [] @ x # us \<and> x \<notin> elems []" by simp
+      then show ?thesis by blast
+    next
+      case False
+      from Cons.prems False have "x \<in> elems us" by simp
+      then obtain ys zs where "us = ys @ x # zs" "x \<notin> elems ys"
+        using Cons.IH by blast
+      then have "u # us = (u # ys) @ x # zs \<and> x \<notin> elems (u # ys)"
+        using False by simp
+      then show ?thesis by blast
     qed
   qed
 qed
