@@ -382,4 +382,37 @@ proof -
   qed
 qed
 
+(*Shortened: induct the lemma; name the empty prefix in True.*)
+lemma "x \<in> elems xs \<Longrightarrow> \<exists>ys zs. xs = ys @ x # zs \<and> x \<notin> elems ys"
+proof (induction xs)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons u us)
+  show ?case
+  proof (cases "x = u")
+    case True
+    then show ?thesis
+      by (intro exI[where x="[]"] exI[where x=us]) simp
+        \<comment> \<open>name both witnesses; @{text auto} will search forever for them.\<close>
+  next
+    case False
+    from Cons.prems False have "x \<in> elems us" by simp
+    then obtain ys zs where "us = ys @ x # zs" "x \<notin> elems ys"
+      using Cons.IH by blast
+    then have "u # us = (u # ys) @ x # zs \<and> x \<notin> elems (u # ys)"
+      using False by simp
+    then show ?thesis by blast
+  qed
+qed
+
+(*Further reading: elems is set; HOL already has the claim.*)
+lemma elems_set: "elems xs = set xs"
+  by (induction xs) auto
+
+lemma "x \<in> elems xs \<Longrightarrow> \<exists>ys zs. xs = ys @ x # zs \<and> x \<notin> elems ys"
+  unfolding elems_set by (rule iffD1[OF in_set_conv_decomp_first])
+    \<comment> \<open>@{text simp} with @{text in_set_conv_decomp_first} loops:
+        it rewrites @{text "x \<notin> set ys"} in the conclusion as well.\<close>
+
 end
