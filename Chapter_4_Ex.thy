@@ -275,4 +275,80 @@ proof -
   qed
 qed
 
+text \<open>Exercise 4.6\<close>
+
+fun elems :: "'a list \<Rightarrow> 'a set" where
+  "elems Nil = {}"
+| "elems (x # xs) = insert x (elems xs)"
+
+(*
+fun find_index :: "'a list \<Rightarrow> 'a \<Rightarrow> (nat \<times> bool)" where
+  "find_index Nil x = (0, False)"
+| "find_index (y # ys) x = (
+    if y = x then
+      (Suc 0, True)
+    else
+      (Suc (fst (find_index ys x))), False)"
+    \<comment> \<open>the extra parenthesis closed the pair too early, so
+        @{text False} was leftover syntax.  Even a well-formed
+        pair with hardcoded @{text False} would be wrong: if
+        @{text x} occurs later, the Boolean must come from the
+        recursive call, via @{text snd}.\<close>
+| "find_index (y # ys) x = (
+    if y = x then
+      (Suc 0, True)
+    else
+      (Suc (fst (find_index ys x)), snd (find_index ys x)))"
+    \<comment> \<open>two independent recursive calls: the mathematical function
+        is still linear, but @{text simp} / the code generator unfold
+        each occurrence separately, so evaluation is exponential in
+        the length of a miss-prefix.  Bind the result once.\<close>
+| "find_index (y # ys) x = (
+    if y = x then
+      (Suc 0, True)
+    else
+      (case find_index ys x of (n, b) \<Rightarrow> (Suc n, b)))"
+
+value "find_index [(3::nat), 4, 5] 3"
+*)
+  \<comment> \<open>not needed for the lemma.  Bare @{text "show ?Q proof"}
+      would demand a closed-form witness such as
+      @{text "take (fst (find_index xs x) - 1) xs"}, but induction
+      on @{text xs} builds the prefix in each case: @{text "[]"}
+      when @{text x} is the head, otherwise @{text "y # ys'"} from
+      the IH.\<close>
+
+lemma "x \<in> elems xs \<Longrightarrow> \<exists>ys zs. xs = ys @ x # zs \<and> x \<notin> elems ys" (is "?P \<Longrightarrow> ?Q")
+proof -
+  (* assume ?P show ?Q  - assumption is lost *)
+  assume ?P thus ?Q
+  proof (induction xs)
+    case Nil
+    thus ?case by simp
+      \<comment> \<open>from assumption infer False, then anything\<close>
+  next
+    case (Cons u us)
+    from this have "x = u \<or> x \<noteq> u" by simp
+      \<comment> \<open>"this" is a moving name\<close>
+    thus ?case
+    proof
+      assume "x = u"
+      hence "u # us = [] @ x # us \<and> x \<notin> elems []" by auto
+      thus ?case by blast
+    next
+      assume noteq: "x \<noteq> u"
+      from this Cons.prems have "x \<in> elems us" by simp
+      then obtain ys zs where "us = ys @ x # zs" "x \<notin> elems ys"
+        using Cons.IH by blast
+        \<comment> \<open>IH splits @{text us}, not @{text "u # us"}.  Prepend @{text u}
+            to the prefix; @{text noteq} is what keeps @{text x} out of
+            @{text "elems (u # ys)"}.\<close>
+      (* with noteq have "u # us = ys @ x # zs \<and> x \<notin> elems ys" by simp *)
+      with noteq have "u # us = (u # ys) @ x # zs \<and> x \<notin> elems (u # ys)" by simp
+        \<comment> \<open>Be careful about what is the new "ys"\<close>
+      thus ?case by blast
+    qed
+  qed
+qed
+
 end
