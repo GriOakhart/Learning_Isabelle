@@ -415,4 +415,30 @@ lemma "x \<in> elems xs \<Longrightarrow> \<exists>ys zs. xs = ys @ x # zs \<and
     \<comment> \<open>@{text simp} with @{text in_set_conv_decomp_first} loops:
         it rewrites @{text "x \<notin> set ys"} in the conclusion as well.\<close>
 
+text \<open>Exercise 4.7\<close>
+
+(*the followings are from Exercise 3.5:*)
+datatype alpha = a | b
+
+inductive S :: "alpha list \<Rightarrow> bool" where
+  empty: "S []"
+| mid: "S xs \<Longrightarrow> S (a # xs @ (b # Nil))"
+| doub: "S xs \<Longrightarrow> S ys \<Longrightarrow> S (xs @ ys)"
+
+(*define by simulation, walking from left to right:*)
+fun balanced :: "nat \<Rightarrow> alpha list \<Rightarrow> bool" where
+  "balanced 0 [] = True"
+(* | "balanced (Suc n) [] = False" *)
+(* | "balanced 0 (b # ws) = False" *)
+    \<comment> \<open>these two cases can be integrated and put at the end,
+        note the order of pattern matching\<close>
+| "balanced (Suc n) (b # ws) = balanced n ws"
+    \<comment> \<open>a left parenthesis was paired, decrease the counter by 1\<close>
+| "balanced n (a # ws) = balanced (Suc n) ws"
+    \<comment> \<open>meet a left parenthesis, increase the counter by 1\<close>
+| "balanced _ _ = False"
+    \<comment> \<open>all two other cases are False\<close>
+
+thm replicate_def
+
 end
