@@ -4,13 +4,13 @@ A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working thr
 [Concrete Semantics](http://concrete-semantics.org/) / Isabelle tutorial material on
 programming and proving.
 
-**Current coverage:** Chapters 2–3 complete; Chapter 4 through section 4.4.7 (Isar
-style, case analysis, structural / computation / rule induction, rule inversion,
-advanced rule induction) plus exercises 4.1–4.2.
+**Current coverage:** Chapters 2–4 complete (tutorial notes through section 4.4.7;
+exercises 2.1–2.11, 3.1–3.5, and 4.1–4.7).
 
-The project is organized so tutorial notes and chapter exercises live in separate theories,
-with a small playground for short-lived experiments and companion note theories for
-longer digressions (rule induction, `star`/`star'` and `simp`).
+The project is organized so tutorial notes and chapter exercises live in separate
+theories, with a small playground for short-lived experiments and companion
+theories for longer digressions (rule induction, `star`/`star'` and `simp`, and
+the balanced-parentheses development of Exercise 4.7).
 
 ## Requirements
 
@@ -40,7 +40,8 @@ isabelle build -D .
 | `Chapter_3.thy` | Tutorial notes for Chapter 3 |
 | `Chapter_3_Ex.thy` | Chapter 3 exercises (imports `Chapter_2` and `Chapter_3`) |
 | `Chapter_4.thy` | Tutorial notes for Chapter 4 (Isar) |
-| `Chapter_4_Ex.thy` | Chapter 4 exercises |
+| `Chapter_4_Ex.thy` | Chapter 4 exercises 4.1–4.6 |
+| `Chapter_4_Ex_7.thy` | Exercise 4.7 (balanced parentheses / grammar `S`) |
 | `Rule_Induction_Notes.thy` | What rule induction is: last lemma of 4.4.7, least fixed points, computation induction |
 | `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
@@ -49,7 +50,7 @@ isabelle build -D .
 Session theories (build order from `ROOT`):
 
 ```text
-Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_4 → Chapter_4_Ex → Rule_Induction_Notes → Star_Simp_Notes
+Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_4 → Chapter_4_Ex → Chapter_4_Ex_7 → Rule_Induction_Notes → Star_Simp_Notes
 ```
 
 ### Dependencies
@@ -57,7 +58,8 @@ Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_
 - `Chapter_2_Ex` → `Chapter_2` (custom `add`, `app`, `rev`, `tree`, `my_map`, …)
 - `Chapter_3` is independent of Chapter 2 (imports `Main` only)
 - `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
-- `Chapter_4` and `Chapter_4_Ex` are independent of earlier chapters (import `Main` only; redefine `ev` / `evn` locally)
+- `Chapter_4` and `Chapter_4_Ex` are independent of earlier chapters (import `Main` only; redefine `ev` / `evn` / `star` / `iter` locally)
+- `Chapter_4_Ex_7` is independent of earlier chapters (imports `Main` only; redefines `alpha` / `S` from Exercise 3.5 locally)
 - `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
 - `Rule_Induction_Notes` → `Chapter_4` (`ev`, `evn`, `ev.induct`)
 
@@ -159,6 +161,32 @@ Recurring proof habits recorded in this theory:
 |----------|---------|
 | **4.1** | Totality / antisymmetry style lemma on `T` and `A`; several Isar styles (`ccontr`, `classical`, `with`, case split with `next` vs `.`) |
 | **4.2** | Split a list into nearly equal halves via `take` / `drop`; even/odd case split, then `moreover`/`ultimately`, then nested `exI` with `force` |
+| **4.3** | Rule inversion `ev (Suc (Suc n)) ⟹ ev n`; `from a` must feed the assumption into `cases` (a bare `proof cases` inverts the goal) |
+| **4.4** | `¬ ev (Suc (Suc (Suc 0)))`; invert the assumption twice — `ev0` is impossible, so `ev_inver_suc` is not required |
+| **4.5** | `iter r n x y ⟹ star r x y` by rule induction on `iter`; case `step` shadows `star.step`, so pick `this(1,3)` or `step.hyps(1)` / `step.IH` |
+| **4.6** | First occurrence: `x ∈ elems xs ⟹ ∃ys zs. xs = ys @ x # zs ∧ x ∉ elems ys`; `disjE` vs `cases "x = u"`, named `exI` witnesses, library `in_set_conv_decomp_first` |
+| **4.7** | *(in `Chapter_4_Ex_7.thy`)* balanced parentheses: `balanced n w ⟷ S (replicate n a @ w)` |
+
+### `Chapter_4_Ex_7.thy`
+
+Companion to Exercise 4.7 (kept out of `Chapter_4_Ex.thy` because the development
+is long). Replays the `{a,b}` grammar `S` from Exercise 3.5 and a left-to-right
+`fun balanced` whose counter is the number of unmatched opening parentheses.
+The recognizer is meant to satisfy `balanced n w ⟷ S (replicate n a @ w)`.
+
+Inserting `[a, b]` at an arbitrary split is not `S.doub` of `S_pair`: that only
+attaches the pair at the left. Rule induction on `S (xs @ ys)` is the wrong hook
+(`mid` wraps the whole word). The working fact `S_insert_ab` inducts on the
+`S`-word and quantifies over every split (`arbitrary` on the two halves).
+
+`balanced_imp_S` is computation induction on the `fun` equations; the `b`-case
+uses `S_insert_ab` after `replicate_app_Cons_same` slides one `a` across `@`.
+The converse `S_imp_balanced` is advanced rule induction (section 4.4.7): the
+hook is the concrete word `replicate n a @ w`, generalized in `n` and `w`. In
+the `doub` case a nonempty left summand cannot be a prefix of the leading `a`s,
+because every nonempty word of `S` ends with `b`.
+
+`balanced_insert_ab` then gives the iff `S (xs @ ys) = S (xs @ [a, b] @ ys)`.
 
 ### `Rule_Induction_Notes.thy`
 
@@ -194,8 +222,9 @@ Scratch space only — not part of the tutorial narrative:
 
 1. Read/extend notes in `Chapter_N.thy` along the tutorial sections.
 2. Solve corresponding problems in `Chapter_N_Ex.thy` (exercises may import earlier chapter theories).
-3. Park temporary experiments in `Tests.thy` without cluttering the main theories.
-4. Rebuild with `isabelle build -D .` after non-trivial edits.
+3. Split a long exercise into its own theory when it would dominate the chapter file (as with `Chapter_4_Ex_7.thy`).
+4. Park temporary experiments in `Tests.thy` without cluttering the main theories.
+5. Rebuild with `isabelle build -D .` after non-trivial edits.
 
 ## Open in Isabelle/jEdit
 
@@ -211,6 +240,7 @@ isabelle jedit -d . -l Learning_Isabelle Chapter_3.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4_Ex.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_4_Ex_7.thy
 isabelle jedit -d . -l Learning_Isabelle Rule_Induction_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Star_Simp_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
