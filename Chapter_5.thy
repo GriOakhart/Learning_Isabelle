@@ -61,6 +61,12 @@ value "aval (Plus (V ''x'') (V ''y'')) s0"
 value "aval (Plus (V ''x'') (V ''y'')) s1"
   \<comment> \<open>"7" :: "int"\<close>
 value "aval (Plus (V ''x'') (V ''y'')) (((\<lambda>x. 0)(''x'' := 7))(''y'' := 3))"
-  \<comment> \<open>"10" :: "int"\<close>
+  \<comment> \<open>"10" :: "int"
+
+      more compact notation:
+      <''x'' := 7, ''y'' := 3>\<close>
+(* <> - is the syntatic sugar for \<lambda>x.0 *)
+
+value "(\<lambda>n::nat. n)(3 := 0)"
 
 end
