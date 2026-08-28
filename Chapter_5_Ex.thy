@@ -87,5 +87,37 @@ value "full_asimp_f (Plus (Plus (N 1) (N 2)) (V ''x''))"
         - @{const plus} only sees the top constructors, so the
           buried @{term "N 0"} in the skeleton remains\<close>
 
+fun aexp_skeleton :: "aexp \<Rightarrow> aexp" where
+  "aexp_skeleton (N m) = N 0"
+| "aexp_skeleton (V x) = V x"
+| "aexp_skeleton (Plus (N m) exp) = aexp_skeleton exp"
+| "aexp_skeleton (Plus exp (N m)) = aexp_skeleton exp"
+| "aexp_skeleton (Plus exp1 exp2) = plus (aexp_skeleton exp1) (aexp_skeleton exp2)"
+    \<comment> \<open>                             ^^^^
+        Note here, we use plus, rather than Plus here, defined in Chapter_5.thy\<close>
 
+text \<open>To check this, define:\<close>
+fun no_constant :: "aexp \<Rightarrow> bool" where
+  "no_constant (N m) = False"
+| "no_constant (V x) = True"
+| "no_constant (Plus exp1 exp2) = (no_constant exp1 \<and> no_constant exp2)"
+
+lemma plus_N0_or_no_constant:
+  "(e1 = N 0 \<or> no_constant e1) \<Longrightarrow>
+   (e2 = N 0 \<or> no_constant e2) \<Longrightarrow>
+   plus e1 e2 = N 0 \<or> no_constant (plus e1 e2)"
+  apply(induction e1 e2 rule: plus.induct)
+  apply(auto)
+  done
+  \<comment> \<open>Needed for the last @{const aexp_skeleton} equation: @{const plus}
+      either drops @{term "N 0"}, or joins two constant-free trees.\<close>
+
+lemma "aexp_skeleton exp = N 0 \<or> no_constant (aexp_skeleton exp)"
+  apply(induction exp rule: aexp_skeleton.induct)
+  apply(auto simp: plus_N0_or_no_constant)
+  done
+  \<comment> \<open>@{text aexp_skeleton.induct} follows the @{text fun} equations.
+      The first four cases are immediate; the last uses the lemma above.
+      @{text no_constant.induct} would be wrong: the claim is about
+      @{term "aexp_skeleton exp"}, not an arbitrary @{const no_constant} term.\<close>
 end
