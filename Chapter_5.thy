@@ -143,4 +143,43 @@ text \<open>
   @{const Plus}, @{const aval} distributes over it, and the IHs finish.
 \<close>
 
+value "asimp_const (Plus (V ''x'') (N 0))"
+  \<comment> \<open>"Plus (V ''x'') (N 0)" :: "aexp"
+      - this should be folded too\<close>
+
+(* this performs the local optimization: *)
+fun plus :: "aexp \<Rightarrow> aexp \<Rightarrow> aexp" where
+  "plus (N m) (N n) = N (m + n)"
+| "plus (N m) exp = (if m = 0 then exp else Plus (N m) exp)"
+| "plus exp (N m) = (if m = 0 then exp else Plus exp (N m))"
+| "plus exp1 exp2 = Plus exp1 exp2"
+  \<comment> \<open>not recursive: only the top constructors of the two arguments\<close>
+
+(* Correctness for plus: *)
+lemma aval_plus: "aval (plus exp1 exp2) s = aval exp1 s + aval exp2 s"
+  apply(induction rule: plus.induct)
+              apply(simp_all)
+  done
+
+(* this version traverses the term: *)
+fun asimp :: "aexp \<Rightarrow> aexp" where
+  "asimp (N m) = N m"
+| "asimp (V x) = V x"
+| "asimp (Plus exp1 exp2) = plus (asimp exp1) (asimp exp2)"
+    \<comment> \<open>recursion: simplify both children, then combine with the local plus\<close>
+
+thm Chapter_5.plus.cases
+
+(* Correctness for asimp: *)
+lemma "aval (asimp exp) s = aval exp s"
+  apply (induction exp)
+  \<comment> \<open>goal (1 subgoal):
+       1. \<And>exp1 exp2.
+             aval (asimp exp1) s = aval exp1 s \<Longrightarrow>
+             aval (asimp exp2) s = aval exp2 s \<Longrightarrow>
+             aval (Chapter_5.plus (asimp exp1) (asimp exp2)) s = aval exp1 s + aval exp2 s
+      need lemma \<open>aval_plus\<close>\<close>
+    apply(simp_all add: aval_plus)
+  done
+
 end
