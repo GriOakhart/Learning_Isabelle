@@ -91,14 +91,56 @@ value "asimp_const' (Plus (Plus (N 1) (N 2)) (N 3))"
 fun asimp_const :: "aexp \<Rightarrow> aexp" where
   "asimp_const (N m) = N m"
 | "asimp_const (V x) = V x"
-| "asimp_const (Plus (N m) (N n)) = N (m + n)"
 | "asimp_const (Plus exp1 exp2) = (
     case (asimp_const exp1, asimp_const exp2) of
       \<comment> \<open>fold if the simplified children are both N\<close>
       (N m, N n) \<Rightarrow> N (m + n)
     | (exp3, exp4) \<Rightarrow> Plus exp3 exp4 )"
 
+thm aexp.split
+
 (* the correctness of asimp_const means that it does not change the semantics: *)
 lemma "aval (asimp_const exp) s = aval exp s"
+  apply (induction exp)
+(*  apply(auto)
+
+goal (1 subgoal):
+ 1. \<And>exp1 exp2.
+       aval (asimp_const exp1) s = aval exp1 s \<Longrightarrow>
+       aval (asimp_const exp2) s = aval exp2 s \<Longrightarrow>
+       aval
+        (case asimp_const exp1 of
+         N m \<Rightarrow>
+           case asimp_const exp2 of N n \<Rightarrow> N (m + n) | V list \<Rightarrow> Plus (N m) (V list)
+           | Plus aexp1 aexp2 \<Rightarrow> Plus (N m) (Plus aexp1 aexp2)
+         | V list \<Rightarrow> Plus (V list) (asimp_const exp2)
+         | Plus aexp1 aexp2 \<Rightarrow> Plus (Plus aexp1 aexp2) (asimp_const exp2))
+        s =
+       aval exp1 s + aval exp2 s
+*)
+    apply (auto split: aexp.split)
+  done
+
+text \<open>
+  The long case analysis is real, but mechanical, so @{text auto} can do it.
+
+  @{text "induction exp"} follows the datatype: @{const N} and @{const V} are
+  immediate; @{const Plus} gets IHs
+  @{prop "aval (asimp_const exp1) s = aval exp1 s"} and the same for @{term exp2}.
+  @{command fun} already installed the equations of @{const asimp_const} and
+  @{const aval} as simp rules, so @{text auto} unfolds both.
+
+  The remaining @{const Plus} goal still has a @{text case} on
+  @{term "asimp_const exp1"} and @{term "asimp_const exp2"} (see the
+  @{text auto}-only subgoal above).  A human would split on the three
+  constructors of each, 9 combinations.  @{thm aexp.split} rewrites
+  @{text "P (case e of \<dots>)"} into a conjunction over those constructors;
+  @{text "split: aexp.split"} hands that rule to @{text auto}.
+
+  Every branch is then trivial: if both results are @{const N}, fold
+  @{term "m + n"} and the IHs identify @{term m} and @{term n} with
+  @{term "aval exp1 s"} and @{term "aval exp2 s"}; otherwise rebuild
+  @{const Plus}, @{const aval} distributes over it, and the IHs finish.
+\<close>
 
 end
