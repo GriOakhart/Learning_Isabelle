@@ -21,5 +21,29 @@ fun optimal :: "aexp \<Rightarrow> bool" where
       @{text "split: aexp.split"}, and a case expression gives the
       simplifier extra equations that can loop.\<close>
 
+lemma "optimal (asimp_const exp)"
+  (* apply(induction exp rule: asimp_const.induct)  - this is the same as: *)
+  apply(induction exp)
+    apply(auto split: aexp.split)
+  done
+
+lemma "optimal (asimp_const exp)"
+  apply(induction rule: optimal.induct)
+        apply(auto)
+          \<comment> \<open>goal (1 subgoal):
+               1. False\<close>
+  oops
+  \<comment> \<open>@{text optimal.induct} hooks onto @{const optimal}'s argument,
+      i.e. @{term "asimp_const exp"}.  One equation is
+      @{prop "optimal (Plus (N m) (N n)) = False"}, so that case
+      is @{term False}.  Induct on @{term exp}, not on @{const optimal}.\<close>
+
+lemma "optimal (asimp_const exp)"
+  apply(induction rule: asimp_const.induct)  \<comment> \<open>compare with line 25\<close>
+    apply(auto split: aexp.split)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>exp1 exp2. optimal exp1 \<Longrightarrow> optimal exp2 \<Longrightarrow> optimal (Plus exp1 exp2)
+          - this is a false subgoal, hence cannot be proved\<close>
+  oops
 
 end
