@@ -3,7 +3,7 @@ theory Chapter_2
 
 begin
 
-text \<open>section 2.2.1 Type bool\<close>
+subsection \<open>2.2.1 Type bool\<close>
 
 (*datatype bool = True | False*)
 
@@ -11,7 +11,7 @@ fun conj :: "bool \<Rightarrow> bool \<Rightarrow> bool" where
   "conj True True = True"
 | "conj _ _ = False"
 
-text \<open>section 2.2.2 Type nat\<close>
+subsection \<open>2.2.2 Type nat\<close>
 
 (*datatype nat = 0 | Suc nat*)
 
@@ -50,7 +50,7 @@ lemma add_comm: "add x y = add y x"
 (*the keywords "lemma", "theorem", "corollary", "proposition" are essentially synonyms,
 the difference is purely conventional / documentary.*)
 
-text \<open>section 2.2.3 Type list\<close>
+subsection \<open>2.2.3 Type list\<close>
 
 (*Occurrences of nonatomic types on the right-hand side of the equal sign
   must be enclosed in double quotes, as is customary in Isabelle.*)
@@ -110,7 +110,7 @@ theorem rev_rev [simp]: "rev (rev xs) = xs"
   rev (app xs ys) = app (rev ys) (rev xs). Each of those is itself by
   induction + auto; then auto finishes both goals of rev_rev.\<close>
 
-text \<open>section 2.2.5\<close>
+subsection \<open>2.2.5\<close>
 
 fun my_map :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a list \<Rightarrow> 'b list" where
   "my_map f Nil = Nil"
@@ -134,12 +134,12 @@ value "my_map (\<lambda>x::nat. x * 2) Nil"
 value "my_map rev [[1::nat, 2], [3, 4, 5]]"
   \<comment> \<open>result: [[2, 1], [5, 4, 3]]\<close>
 
-text \<open>Section 2.2.6: Types int and real\<close>
+subsection \<open>2.2.6: Types int and real\<close>
 
 (*See Tests.thy*)
 
-text \<open>Section 2.3 Type and Function Definitions\<close>
-text \<open>Section 2.3.1 Datatypes\<close>
+section \<open>2.3 Type and Function Definitions\<close>
+subsection \<open>2.3.1 Datatypes\<close>
 
 datatype 'a tree = Tip | Node "'a tree" 'a "'a tree"
   \<comment> \<open>Tip and Node are constructors. A tree is either a bare leaf,
@@ -172,7 +172,7 @@ fun lookup :: "('a * 'b) list \<Rightarrow> 'a \<Rightarrow> 'b option" where
       which parses as 'a * ('b list));
       write ((x, y) # xs) in the pattern so (x, y) is one element of the list.\<close>
 
-text \<open>Section 2.3.2 Definitions\<close>
+subsection \<open>2.3.2 Definitions\<close>
 
 text \<open>
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -184,7 +184,7 @@ text \<open>
 definition sq :: "nat \<Rightarrow> nat" where
   "sq n = n * n"
 
-text \<open>Section 2.3.3 Abbreviations\<close>
+subsection \<open>2.3.3 Abbreviations\<close>
 
 text \<open>
   Abbreviation is only a syntactic sugar.
@@ -197,7 +197,7 @@ abbreviation sq' :: "nat \<Rightarrow> nat" where
   Reach for abbreviation only when you have a clear, conscious reason
   that the pure syntactic-sugar behaviour is what you want.*)
 
-text \<open>Section 2.3.4 Recursive Functions\<close>
+subsection \<open>2.3.4 Recursive Functions\<close>
 
 fun div2 :: "nat \<Rightarrow> nat" where
   "div2 0 = 0"
@@ -236,7 +236,7 @@ lemma div2_02: "div2 m = m div 2"
     prove properties of f via f.induct (computation induction). If it is one equation
     per constructor, structural induction and f.induct amount to the same thing.\<close>
 
-text \<open>Section 2.4 Induction Heuristics\<close>
+section \<open>2.4 Induction Heuristics\<close>
 
 fun itrev_helper :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "itrev_helper Nil ys = ys"

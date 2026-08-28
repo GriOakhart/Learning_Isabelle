@@ -3,7 +3,7 @@ theory Chapter_3
 
 begin
 
-text \<open>Section 3.2 Sets\<close>
+section \<open>3.2 Sets\<close>
 
 text \<open>
 How @{typ "'a set"} is defined (not a datatype)
@@ -77,7 +77,7 @@ value "set ([] :: int list)"
 lemma "finite (set xs)" by simp
 lemma "infinite (UNIV :: nat set)" by simp
 
-text \<open>Section 3.3 Proof Automation\<close>
+section \<open>3.3 Proof Automation\<close>
 
 lemma "\<forall>x. \<exists>y. x = y"
   by auto
@@ -103,7 +103,7 @@ lemma "\<lbrakk> \<forall>x y. T x y \<or> T y x;
       \<Longrightarrow> \<forall>x y. A x y \<longrightarrow> T x y"
   by blast
 
-text \<open>section 3.3.1 Sledgehammer\<close>
+subsection \<open>3.3.1 Sledgehammer\<close>
 
 lemma "\<lbrakk>xs @ ys = ys @ xs; length xs = length ys\<rbrakk> \<Longrightarrow> xs = ys"
   by(metis append_eq_conv_conj)
@@ -121,14 +121,14 @@ text "
   xs = ys
 "
 
-text \<open>section 3.3.2 Arithmetic\<close>
+subsection \<open>3.3.2 Arithmetic\<close>
 
 lemma "\<lbrakk>(a::nat) \<le> x + b; 2 * x < c\<rbrakk> \<Longrightarrow> 2 * a + 1 \<le> 2 * b + c"
   by arith \<comment> \<open>can be proved directly by simpification\<close>
 
-text \<open>Section 3.4 Single Step Proofs\<close>
+section \<open>3.4 Single Step Proofs\<close>
 
-text \<open>section 3.4.1 Instantiating Unknowns\<close>
+subsection \<open>3.4.1 Instantiating Unknowns\<close>
 
 (*the rules*)
 thm refl
@@ -140,7 +140,7 @@ thm conjI[of "False" "a = b"]
 thm conjI[where ?P = "x = y" and ?Q = "y = z"]
 thm conjI[of "True" _]
 
-text \<open>section 3.4.2 Rule Application\<close>
+subsection \<open>3.4.2 Rule Application\<close>
 
 lemma "a = b \<and> False"
   apply(rule conjI[of "a = b" "False"])
@@ -158,7 +158,7 @@ lemma "x = y \<and> y = z \<Longrightarrow> x = z"
    apply(simp_all)
   done
 
-text \<open>section 3.4.3 Introduction Rules\<close>
+subsection \<open>3.4.3 Introduction Rules\<close>
 
 lemma "\<forall>x. \<exists>y. x = y"
   apply rule
@@ -172,7 +172,7 @@ lemma "\<lbrakk>(a::nat) \<le> b; b \<le> c; c \<le> d; d \<le> e\<rbrakk> \<Lon
   \<comment> \<open>le_trans is not an introduction rule by default,
       because of the disastrous effect on the search space,\<close>
 
-text \<open>section 3.4.4 Forward Proof\<close>
+subsection \<open>3.4.4 Forward Proof\<close>
 
 thm conjI[OF refl[of "a"] refl[of "False"]]
 
@@ -189,9 +189,9 @@ text \<open>
   i.e., to replace an assumption A' , where A' unifies with A, with
   the correspondingly instantiated B.\<close>
 
-text \<open>Section 3.5 Inductive Definitions\<close>
+section \<open>3.5 Inductive Definitions\<close>
 
-text \<open>section 3.5.1 An Example: Even Numbers\<close>
+subsection \<open>3.5.1 An Example: Even Numbers\<close>
 
 (*inductive definition*)
 inductive ev :: "nat \<Rightarrow> bool" where
@@ -265,7 +265,7 @@ declare ev.intros[simp, intro]
 
 text \<open>The rules of an inductive definition are not simplification rules by default.\<close>
 
-text \<open>section 3.5.2 The Reflexive Transitive Closure\<close>
+subsection \<open>3.5.2 The Reflexive Transitive Closure\<close>
 
 inductive star :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for f where
   refl: "star f x x"

@@ -3,7 +3,7 @@ theory Chapter_2_Ex
 
 begin
 
-text \<open>Exercise 2.1\<close>
+section \<open>Exercise 2.1\<close>
 
 text \<open>
   The associativity and commutativity of @{const add}
@@ -29,7 +29,7 @@ value "1 - (2 :: nat)"
 value "1 - (2 :: int)"
   \<comment> \<open>"- 1" :: "int"\<close>
 
-text \<open>Exercise 2.2\<close>
+section \<open>Exercise 2.2\<close>
 
 (*define double in recursive method*)
 fun double :: "nat \<Rightarrow> nat" where
@@ -42,7 +42,7 @@ lemma double_01: "double m = add m m"
    apply(auto)
   done
 
-text \<open>Exercise 2.3\<close>
+section \<open>Exercise 2.3\<close>
 
 fun count_01 :: "'a \<Rightarrow> 'a list \<Rightarrow> nat" where
   "count_01 m Nil = 0"
@@ -66,7 +66,7 @@ lemma count_03: "count_01 m xs \<le> length xs"
    apply(auto)
   done
 
-text \<open>Exercise 2.4\<close>
+section \<open>Exercise 2.4\<close>
 
 (*append an element to the end of the list*)
 fun snoc :: "'a list \<Rightarrow> 'a \<Rightarrow> 'a list" where
@@ -93,7 +93,7 @@ lemma double_reverse: "reverse (reverse xs) = xs"
    apply(auto)
   done
 
-text \<open>Exercise 2.5\<close>
+section \<open>Exercise 2.5\<close>
 
 fun sum_upto :: "nat \<Rightarrow> nat" where
   "sum_upto 0 = 0"
@@ -113,7 +113,7 @@ theorem sum_formula: "sum_upto n = n * (n + 1) div 2"
    apply(auto)
   done
 
-text \<open>Exercise 2.6\<close>
+section \<open>Exercise 2.6\<close>
 
 fun sum_list :: "nat list \<Rightarrow> nat" where
   "sum_list Nil = 0"
@@ -144,7 +144,7 @@ lemma sum_tree_01: "sum_tree tree = sum_list (contents tree)"
    apply(auto)
   done
 
-text \<open>Exercise 2.7\<close>
+section \<open>Exercise 2.7\<close>
 
 fun pre_order :: "'a tree \<Rightarrow> 'a list" where
   "pre_order Tip = Nil"
@@ -171,7 +171,7 @@ lemma pre_post: "pre_order (mirror tree) = rev (post_order tree)"
       development must stick to app in pre_order/post_order; otherwise auto cannot
       reuse those simp rules in the induction step.\<close>
 
-text \<open>Exercise 2.8\<close>
+section \<open>Exercise 2.8\<close>
 
 fun intersperse :: "'a \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "intersperse m Nil = Nil"
@@ -195,7 +195,7 @@ lemma map_intersperse: "my_map f (intersperse m xs) = intersperse (f m) (my_map 
     apply(auto)
   done
 
-text \<open>Exercise 2.10\<close>
+section \<open>Exercise 2.10\<close>
 
 datatype tree0 = Tip | Node tree0 tree0
   \<comment> \<open>Reusing Tip/Node is allowed (Isabelle qualifies them as tree0.Tip /
@@ -248,7 +248,7 @@ lemma siz_of_exploding: "nodes (explode n tree) = Suc (nodes tree) * (2 ^ n) - 1
         auto simp: algebra_simps would also work, but classical auto is unused.\<close>
   done
 
-text \<open>Exercise 2.11\<close>
+section \<open>Exercise 2.11\<close>
 
 datatype exp = Var | Const int | Add exp exp | Mult exp exp
   \<comment> \<open>arithmetic expressions in one variable over integers (type int)\<close>

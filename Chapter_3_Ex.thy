@@ -3,7 +3,7 @@ theory Chapter_3_Ex
 
 begin
 
-text \<open>Exercise 3.1\<close>
+section \<open>Exercise 3.1\<close>
 
 fun set :: "'a tree \<Rightarrow> 'a set" where
   "set Tip = {}"
@@ -73,7 +73,7 @@ text \<open>
   Best practice: @{text "\<Longrightarrow>"} (==>) for lemma assumptions; @{text "\<longrightarrow>"} (-->) only
   when implication is part of a larger HOL formula.\<close>
 
-text \<open>Exercise 3.2\<close>
+section \<open>Exercise 3.2\<close>
 
 inductive palindrome :: "'a list \<Rightarrow> bool" where
   empty: "palindrome Nil"
@@ -111,7 +111,7 @@ lemma "palindrome xs \<Longrightarrow> rev xs = xs"
     apply(simp_all)
   done
 
-text \<open>Exercise 3.3\<close>
+section \<open>Exercise 3.3\<close>
 
 inductive star' :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for r where
   refl: "star' r x x"
@@ -160,7 +160,7 @@ text \<open>
 
   See Star_Simp_Notes.thy for the full explanation and the experiments.\<close>
 
-text \<open>Exercise 3.4\<close>
+section \<open>Exercise 3.4\<close>
 
 inductive iter :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for r where
   init: "iter r 0 x x"
@@ -175,7 +175,7 @@ lemma "star r x y \<Longrightarrow> \<exists>n. iter r n x y"
   apply(metis step)
   done
 
-text \<open>Exercise 3.5\<close>
+section \<open>Exercise 3.5\<close>
 
 datatype alpha = a | b
 

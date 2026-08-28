@@ -21,7 +21,7 @@ fun modular_02 :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
   "modular_02 a 0 = a"
 | "modular_02 a (Suc b) = (if a < (Suc b) then a else modular_02 (a - (Suc b)) (Suc b))"
 
-text \<open>Section 2.2.6: Types int and real\<close>
+subsection \<open>2.2.6: Types int and real\<close>
 
 value "int 5"
 value "real 5"

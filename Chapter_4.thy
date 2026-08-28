@@ -3,7 +3,7 @@ theory Chapter_4
 
 begin
 
-text \<open>Section 4.1 Isar by Example\<close>
+section \<open>4.1 Isar by Example\<close>
 
 lemma Cantor_01: "\<not>surj(f :: 'a \<Rightarrow> 'a set)"
 proof
@@ -21,7 +21,7 @@ proof
   from this show "False" by blast
 qed
 
-text \<open>section 4.1.1 this, then, hence and thus\<close>
+subsection \<open>4.1.1 this, then, hence and thus\<close>
 
 (*
   then  = from this
@@ -40,7 +40,7 @@ qed
                     with facts = from facts this
 *)
 
-text \<open>section 4.1.2 Structured Lemma Statements: fixes, assumes, shows\<close>
+subsection \<open>4.1.2 Structured Lemma Statements: fixes, assumes, shows\<close>
 
 lemma
   fixes f :: "'a \<Rightarrow> 'a set"
@@ -54,7 +54,7 @@ proof -
   thus "False" by blast
 qed
 
-text \<open>section 4.2 Proof Patterns\<close>
+section \<open>4.2 Proof Patterns\<close>
 
 (* reason forword from \<exists>x. P(x):
     have "\<exists>x. P(x)" \<open>proof\<close>
@@ -73,7 +73,7 @@ proof
   thus "False" by blast
 qed
 
-text \<open>section 4.2.2 Chains of (In)Equations\<close>
+subsection \<open>4.2.2 Chains of (In)Equations\<close>
 
 (*
   Textbook display:
@@ -155,9 +155,9 @@ Walk-through of ineq_chain_double:
                            then from calculation
   show "1 < n + n" .       "." matches the goal against calculation\<close>
 
-text \<open>Section 4.3 Streamlining Proofs\<close>
+section \<open>4.3 Streamlining Proofs\<close>
 
-text \<open>section 4.3.1 Pattern Matching and Quotations\<close>
+subsection \<open>4.3.1 Pattern Matching and Quotations\<close>
 
 (*
   show formula (is pattern)
@@ -207,7 +207,7 @@ proof -
   from \<open>n > 0\<close> show ?thesis by simp
 qed
 
-text \<open>section 4.3.2 moreover\<close>
+subsection \<open>4.3.2 moreover\<close>
 
 (*
   this         — the latest fact only
@@ -222,7 +222,7 @@ text \<open>section 4.3.2 moreover\<close>
   Do not mix also and moreover in the same block.
 *)
 
-text \<open>section 4.3.3 Local Lemmas\<close>
+subsection \<open>4.3.3 Local Lemmas\<close>
 
 (* This is simply an extension of the basic `have` construct:
     have B if name: A_1, ..., A_m for x_1, ..., x_n
@@ -240,9 +240,9 @@ proof -
   then show ?thesis using assms by (auto simp add: dvd_def)
 qed
 
-text \<open>Section 4.4 Case Analysis and Induction\<close>
+section \<open>4.4 Case Analysis and Induction\<close>
 
-text \<open>section 4.4.1 Datatype Case Analysis\<close>
+subsection \<open>4.4.1 Datatype Case Analysis\<close>
 
 thm tl_def
 
@@ -279,7 +279,7 @@ next
   thus ?thesis by simp
 qed
 
-section \<open>Section 4.4.2 Structural Induction\<close>
+subsection \<open>4.4.2 Structural Induction\<close>
 
 lemma "\<Sum>{0..n::nat} = n*(n+1) div 2"
 proof (induction n)
@@ -332,7 +332,7 @@ next
   from Suc.IH[OF Suc.prems] show ?case by simp
 qed
 
-text \<open>section 4.4.3 Computation Induction\<close>
+subsection \<open>4.4.3 Computation Induction\<close>
 
 fun pair_count :: "'a list \<Rightarrow> nat" where
   "pair_count [] = 0"
@@ -356,7 +356,7 @@ next
         \<open>(1)\<close> may be omitted because this case has exactly one induction hypothesis.\<close>
 qed
 
-text \<open>section 4.4.4 Rule Induction\<close>
+subsection \<open>4.4.4 Rule Induction\<close>
 
 inductive ev :: "nat \<Rightarrow> bool" where
   ev0: "ev 0"
@@ -387,7 +387,7 @@ qed
   thus ?case using \<open>evn m\<close> by blast
 qed *)
 
-text \<open>section 4.4.5 Assumption Naming\<close>
+subsection \<open>4.4.5 Assumption Naming\<close>
 
 (*
   case name  sets up a fact list also called name, split into:
@@ -406,7 +406,7 @@ text \<open>section 4.4.5 Assumption Naming\<close>
     name.IH(2)   name.prems(1-2)
 *)
 
-text \<open>section 4.4.6 Rule Inversion\<close>
+subsection \<open>4.4.6 Rule Inversion\<close>
 
 lemma ev_inver: "ev m \<Longrightarrow> ev (m - 2)"
 proof -
@@ -460,7 +460,7 @@ qed
       related by arithmetic but are different term shapes, so a simp rule for
       \<open>ev (?m - 2)\<close> will not fire on \<open>ev (Suc 0)\<close>. Related \<noteq> same pattern.\<close>
 
-text \<open>section 4.4.7 Advanced Rule Induction\<close>
+subsection \<open>4.4.7 Advanced Rule Induction\<close>
 
 thm ev.inducts
 

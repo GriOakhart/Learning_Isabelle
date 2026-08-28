@@ -3,7 +3,7 @@ theory Chapter_4_Ex
 
 begin
 
-text \<open>Exercise 4.1\<close>
+section \<open>Exercise 4.1\<close>
 
 lemma
   assumes T: "\<forall>x y. T x y \<or> T y x"
@@ -92,7 +92,7 @@ proof -
   qed
 qed
 
-text \<open>Exercise 4.2\<close>
+section \<open>Exercise 4.2\<close>
 
 (*the following built-in functions are needed*)
 term take
@@ -189,7 +189,7 @@ proof
   qed
 qed
 
-text \<open>Exercise 4.3\<close>
+section \<open>Exercise 4.3\<close>
 
 inductive ev :: "nat \<Rightarrow> bool" where
   ev0: "ev 0"
@@ -211,7 +211,7 @@ proof -
   qed
 qed
 
-text \<open>Exercise 4.4\<close>
+section \<open>Exercise 4.4\<close>
 
 lemma "\<not> ev (Suc (Suc (Suc 0)))"
 proof
@@ -236,7 +236,7 @@ proof
   qed
 qed
 
-text \<open>Exercise 4.5\<close>
+section \<open>Exercise 4.5\<close>
 
 inductive star :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for f where
   refl: "star f x x"
@@ -275,7 +275,7 @@ proof -
   qed
 qed
 
-text \<open>Exercise 4.6\<close>
+section \<open>Exercise 4.6\<close>
 
 fun elems :: "'a list \<Rightarrow> 'a set" where
   "elems Nil = {}"

@@ -3,7 +3,7 @@ theory Chapter_4_Ex_7
 
 begin
 
-text \<open>Exercise 4.7\<close>
+section \<open>Exercise 4.7\<close>
 
 (*the followings are from Exercise 3.5:*)
 datatype alpha = a | b
