@@ -69,4 +69,36 @@ value "aval (Plus (V ''x'') (V ''y'')) (((\<lambda>x. 0)(''x'' := 7))(''y'' := 3
 
 value "(\<lambda>n::nat. n)(3 := 0)"
 
+subsection \<open>5.1.3 Constant Folding\<close>
+text \<open>
+  For example, the expression Plus (V ''x'') (Plus (N 3) (N 1))
+  is simplified to Plus (V ''x'') (N 4)\<close>
+
+(* this is incorrect: *)
+fun asimp_const' :: "aexp \<Rightarrow> aexp" where
+  "asimp_const' (N m) = N m"
+| "asimp_const' (V x) = V x"
+| "asimp_const' (Plus (N m) (N n)) = N (m + n)"
+| "asimp_const' (Plus exp1 exp2) = Plus (asimp_const' exp1) (asimp_const' exp2)"
+  \<comment> \<open>rebuilds Plus without checking if the simplified children became N\<close>
+
+value "asimp_const' (Plus (N 7) (Plus (V ''x'') (Plus (N 3) (N 5))))"
+value "asimp_const' (Plus (Plus (N 1) (N 2)) (N 3))"
+  \<comment> \<open>"Plus (N 3) (N 3)" :: "aexp"
+      this doesn't work!\<close>
+
+(* the definition from book: *)
+fun asimp_const :: "aexp \<Rightarrow> aexp" where
+  "asimp_const (N m) = N m"
+| "asimp_const (V x) = V x"
+| "asimp_const (Plus (N m) (N n)) = N (m + n)"
+| "asimp_const (Plus exp1 exp2) = (
+    case (asimp_const exp1, asimp_const exp2) of
+      \<comment> \<open>fold if the simplified children are both N\<close>
+      (N m, N n) \<Rightarrow> N (m + n)
+    | (exp3, exp4) \<Rightarrow> Plus exp3 exp4 )"
+
+(* the correctness of asimp_const means that it does not change the semantics: *)
+lemma "aval (asimp_const exp) s = aval exp s"
+
 end
