@@ -112,6 +112,7 @@ lemma plus_N0_or_no_constant:
   \<comment> \<open>Needed for the last @{const aexp_skeleton} equation: @{const plus}
       either drops @{term "N 0"}, or joins two constant-free trees.\<close>
 
+(* This shows the correctness of aexp_skeleton: *)
 lemma "aexp_skeleton exp = N 0 \<or> no_constant (aexp_skeleton exp)"
   apply(induction exp rule: aexp_skeleton.induct)
   apply(auto simp: plus_N0_or_no_constant)
@@ -120,4 +121,18 @@ lemma "aexp_skeleton exp = N 0 \<or> no_constant (aexp_skeleton exp)"
       The first four cases are immediate; the last uses the lemma above.
       @{text no_constant.induct} would be wrong: the claim is about
       @{term "aexp_skeleton exp"}, not an arbitrary @{const no_constant} term.\<close>
+
+definition full_asimp :: "aexp \<Rightarrow> aexp" where
+  \<comment> \<open>definition produces the equation full_asimp_def and does not put it in the simp set.\<close>
+  "full_asimp exp = plus (aexp_skeleton exp) (N (sum_const exp))"
+    \<comment> \<open>plus again, to eliminate if the overall sum is (N 0)\<close>
+
+(* Correctness of full_asimp: *)
+lemma "aval (full_asimp exp) s = aval exp s"
+  apply (induction exp rule: aexp_skeleton.induct)
+          apply (auto simp: full_asimp_def aval_plus split: aexp.split)
+            \<comment> \<open>full_asimp_def should be added explicitly and manually, see line 126.\<close>
+            \<comment> \<open>from the subgoals we found the need for \<open>aval (plus e1 e2)\<close>,
+                which is exactly what lemma \<open>aval_plus\<close> stated.\<close>
+  done
 end
