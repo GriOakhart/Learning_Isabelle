@@ -195,4 +195,21 @@ fun asimp2 :: "aexp2 \<Rightarrow> aexp2" where
 | "asimp2 (V x) = V x"
 | "asimp2 (Plus exp1 exp2) = plus2 (asimp2 exp1) (asimp2 exp2)"
 | "asimp2 (Multiply exp1 exp2) = multiply2 (asimp2 exp1) (asimp2 exp2)"
+
+lemma "aval2 (asimp2 exp) s = aval2 exp s"
+  apply (induction exp)
+     apply (simp_all add: aval2_plus2 aval2_multiply2)
+  done
+
+text \<open>
+  A @{const full_asimp}-style gatherer for @{typ aexp2} is a different problem.
+  With only @{const Plus}, every @{const N} is an addend, so @{const sum_const}
+  plus a skeleton works.  @{const Multiply} puts constants in different roles:
+  @{term "Plus (N 1) (Multiply (V x) (N 2))"} is @{text "2x + 1"}, not @{text "x + 3"};
+  @{term "Plus (Multiply (N 2) (V x)) (Multiply (N 3) (V x))"} has no free constants
+  but should become @{text "5x"}.  A complete simplifier needs a polynomial normal
+  form, distributivity, and like-term collection --- a small algebra theory, not
+  another homework function.  @{const asimp2} is the intended local layer
+  (@{text 0}, @{text 1}, @{text "N * N"}, @{text "N + N"}).\<close>
+
 end
