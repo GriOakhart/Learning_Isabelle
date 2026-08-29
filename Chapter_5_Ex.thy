@@ -155,4 +155,44 @@ lemma substitution_lemma: "aval (subst x a exp) s = aval exp (s(x := aval a s))"
 corollary "aval a1 s = aval a2 s \<Longrightarrow> aval (subst x a1 e) s = aval (subst x a2 e) s"
   by (auto simp: substitution_lemma)
 
+section \<open>Exercise 5.4\<close>
+
+datatype aexp2 = N int | V vname | Plus aexp2 aexp2 | Multiply aexp2 aexp2
+
+fun aval2 :: "aexp2 \<Rightarrow> state \<Rightarrow> val" where
+  "aval2 (N m) n = m"
+| "aval2 (V x) n = n x"
+| "aval2 (Plus exp1 exp2) n = aval2 exp1 n + aval2 exp2 n"
+| "aval2 (Multiply exp1 exp2) n = aval2 exp1 n * aval2 exp2 n"
+
+value "aval2 (Plus (Multiply (V ''x'') (N 3)) (Multiply (N 4) (V ''y'')))
+      (((\<lambda>x. 0)(''x'' := 3))(''y'' := 4))"
+
+fun plus2 :: "aexp2 \<Rightarrow> aexp2 \<Rightarrow> aexp2" where
+  "plus2 (N m) (N n) = N (m + n)"
+| "plus2 (N m) exp = (if m = 0 then exp else Plus (N m) exp)"
+| "plus2 exp (N m) = (if m = 0 then exp else Plus exp (N m))"
+| "plus2 exp1 exp2 = Plus exp1 exp2"
+
+lemma aval2_plus2: "aval2 (plus2 exp1 exp2) s = aval2 exp1 s + aval2 exp2 s"
+  apply(induction rule: plus2.induct)
+                      apply(simp_all)
+  done
+
+fun multiply2 :: "aexp2 \<Rightarrow> aexp2 \<Rightarrow> aexp2" where
+  "multiply2 (N m) (N n) = N (m * n)"
+| "multiply2 (N m) exp = (if m = 0 then (N 0) else (if m = 1 then exp else Multiply (N m) exp))"
+| "multiply2 exp (N m) = (if m = 0 then (N 0) else (if m = 1 then exp else Multiply exp (N m)))"
+| "multiply2 exp1 exp2 = Multiply exp1 exp2"
+
+lemma aval2_multiply2: "aval2 (multiply2 exp1 exp2) s = aval2 exp1 s * aval2 exp2 s"
+  apply(induction rule: multiply2.induct)
+                      apply(simp_all)
+  done
+
+fun asimp2 :: "aexp2 \<Rightarrow> aexp2" where
+  "asimp2 (N m) = N m"
+| "asimp2 (V x) = V x"
+| "asimp2 (Plus exp1 exp2) = plus2 (asimp2 exp1) (asimp2 exp2)"
+| "asimp2 (Multiply exp1 exp2) = multiply2 (asimp2 exp1) (asimp2 exp2)"
 end
