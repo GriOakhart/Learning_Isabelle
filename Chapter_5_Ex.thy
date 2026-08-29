@@ -135,4 +135,24 @@ lemma "aval (full_asimp exp) s = aval exp s"
             \<comment> \<open>from the subgoals we found the need for \<open>aval (plus e1 e2)\<close>,
                 which is exactly what lemma \<open>aval_plus\<close> stated.\<close>
   done
+
+section \<open>Exercise 5.3\<close>
+
+(* subst x a e is the result of replacing every occurrence of variable x by a in e: *)
+fun subst :: "vname \<Rightarrow> aexp \<Rightarrow> aexp \<Rightarrow> aexp" where
+  "subst y a (N m) = N m"
+| "subst y a (V x) = (if y = x then a else (V x))"
+| "subst y a (Plus exp1 exp2) = Plus (subst y a exp1) (subst y a exp2)"
+
+value "subst ''x'' (N 3) (Plus (V ''x'') (V ''y''))"
+  \<comment> \<open>"Plus (N 3) (V ''y'')" :: "aexp"\<close>
+
+lemma substitution_lemma: "aval (subst x a exp) s = aval exp (s(x := aval a s))"
+  apply (induction exp)  \<comment> \<open>induction on \<open>exp\<close>\<close>
+    apply (simp_all)
+  done
+
+corollary "aval a1 s = aval a2 s \<Longrightarrow> aval (subst x a1 e) s = aval (subst x a2 e) s"
+  by (auto simp: substitution_lemma)
+
 end
