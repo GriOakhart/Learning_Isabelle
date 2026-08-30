@@ -311,4 +311,37 @@ fun aval4 :: "aexp4 \<Rightarrow> state \<Rightarrow> (val \<times> state) optio
       match @{text "Some (v, t)"}, not a bare pair;
       thread @{text t1} into @{text e2}, not the original @{text s};
       test zero with @{text "if v2 = 0"} --- @{text "Some (0, t2)"} is not a constructor split.\<close>
+
+section \<open>Exercise 5.6\<close>
+
+text \<open>
+  The x++ of 5.5 really changes the state that remains after evaluation,
+  which is why the return type is val \<times> state (and later option).
+
+  The LET of 5.6 does not leave the binding outside the expression;
+  the return type is still a single int.
+
+  One is a side effect, the other is a local scope. They are different extensions.\<close>
+
+datatype lexp = Nl int | Vl vname | Plusl lexp lexp | LET vname lexp lexp
+
+fun lval :: "lexp \<Rightarrow> state \<Rightarrow> val" where
+  "lval (Nl m) s = m"
+| "lval (Vl x) s = s x"
+| "lval (Plusl e1 e2) s = lval e1 s + lval e2 s"
+| "lval (LET x e1 e2) s = lval e2 (\<lambda>x. lval e1 s)"
+  \<comment> \<open>first evaluate e1, then bind it to x, to evaluate e2\<close>
+
+value "lval (LET ''x'' (Nl 3) (Plusl (Vl ''x'') (Nl 1))) ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"4" :: "int"
+        - the binding hides the outer \<open>x\<close>, so the outer state is never used\<close>
+value "lval (LET ''x'' (Plusl (Vl ''x'') (Nl 1)) (Plusl (Vl ''x'') (Vl ''x''))) ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"12" :: "int"
+        - e1 is evaluated in the original state, so 5+1=6, and e2 is evaluated using ''x'':=6\<close>
+value "lval (LET ''x'' (Nl 1) (LET ''x'' (Nl 2) (Vl ''x''))) ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"2" :: "int"
+        - nesting and shadowing\<close>
+value "lval (LET ''x'' (Nl 10) (Plusl (Vl ''x'') (LET ''x'' (Nl 1) (Vl ''x'')))) ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"11" :: "int"
+        - an inner binding does not affect an outer use of the same name\<close>
 end
