@@ -178,4 +178,15 @@ lemma "aval (asimp exp) s = aval exp s"
     apply(simp_all add: aval_plus)
   done
 
+section \<open>Exercise 5.2 Boolean Expressions\<close>
+
+datatype bexp = Bc bool | Not bexp | And bexp bexp | Less aexp aexp
+  \<comment> \<open>Note a  comparison of arithmetic expressions for less-than,
+      there are no boolean variables in this language\<close>
+
+fun bval :: "bexp \<Rightarrow> state \<Rightarrow> bool" where
+  "bval (Bc v) s = v"
+| "bval (Not e) s = (\<not> bval e s)"
+| "bval (And e1 e2) s = (bval e1 s \<and> bval e2 s)"
+| "bval (Less e1 e2) s = (aval e1 s < aval e2 s)"
 end
