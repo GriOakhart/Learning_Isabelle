@@ -357,4 +357,14 @@ value "lval (LET ''x'' (Nl 3) (Plusl (Vl ''x'') (Vl ''y'')))
   \<comment> \<open>"6" :: "int"
         - this yields incorrect answer using the equation in line 332\<close>
 
+fun inline :: "lexp \<Rightarrow> aexp" where
+  "inline (Nl m) = aexp.N m"
+| "inline (Vl x) = aexp.V x"
+| "inline (Plusl e1 e2) = aexp.Plus (inline e1) (inline e2)"
+| "inline (LET x e1 e2) = subst x (inline e1) (inline e2)"
+  \<comment> \<open>                          ^^
+      same @{text vname} as the @{const LET} binder: @{const subst}'s
+      first argument is the name to replace, not an expression.
+      @{text "inline (Vl x)"} is @{text "aexp.V x"} --- that would be a
+      replacement term, not a name.\<close>
 end
