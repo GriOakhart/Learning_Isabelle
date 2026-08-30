@@ -212,4 +212,53 @@ text \<open>
   another homework function.  @{const asimp2} is the intended local layer
   (@{text 0}, @{text 1}, @{text "N * N"}, @{text "N + N"}).\<close>
 
+section \<open>Exercise 5.5\<close>
+
+datatype aexp3 = N int | V vname | Increment vname | Plus aexp3 aexp3
+
+fun aval3 :: "aexp3 \<Rightarrow> state \<Rightarrow> val \<times> state" where
+  "aval3 (N m) s = (m, s)"
+| "aval3 (V x) s = (s x, s)"
+(* | "aval3 (Increment x) s = (s x, s(x := x + 1)))" *)
+(* | "aval3 (Increment x) s = (s x, s(x := (Plus (V x) (N 1))))" *)
+(* | "aval3 (Increment x) s = (s x, s(x := Suc (s x)))" *)
+| "aval3 (Increment x) s = (s x, s(x := s x + 1))"
+(* | "aval3 (Plus e1 e2) s = (fst (aval3 e1 s) + fst (aval3 e2 s), s)" *)
+    \<comment> \<open>final state should depend on the states returned by aval3 e1 and e2\<close>
+(* | "aval3 (Plus e1 e2) s = (fst (aval3 e1 s) + fst (aval3 e2 s), snd (aval3 e2 (snd (aval3 e1 s))))" *)
+    \<comment> \<open>still incorrect, see comments below\<close>
+(* | "aval3 (Plus e1 e2) s = (fst (aval3 e1 s) + fst (aval3 e2 (snd (aval3 e1 s))), snd (aval3 e2 (snd (aval3 e1 s))))" *)
+    \<comment> \<open>this works, but ugly and low-efficient\<close>
+| "aval3 (Plus e1 e2) s = (
+    case aval3 e1 s of
+      (v1, t1) \<Rightarrow> case aval3 e2 t1 of
+        (v2, t2) \<Rightarrow> (v1 + v2, t2))"
+  \<comment> \<open>Do not pattern-match as @{text "(v1, s1)"}: @{const s1} is already
+      a @{typ state} constant in @{file \<open>Chapter_5.thy\<close>}, so the clause
+      is read as a constructor pattern and @{command fun} fails.\<close>
+
+value "aval3 (Increment ''x'') ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"(5, _)" :: "int \<times> (char list \<Rightarrow> int)"
+      @{command value} evaluates via the code generator, then tries to
+      rebuild a HOL term.  A state is @{typ "vname \<Rightarrow> val"} --- infinite,
+      so no finite term, hence @{text "_"}.  Apply it to inspect (next).\<close>
+value "snd (aval3 (Increment ''x'') ((\<lambda>x. 0)(''x'' := 5))) ''x''"
+  \<comment> \<open>"6" :: "int"\<close>
+value "aval3 (Plus (Increment ''x'') (Increment ''x'')) ((\<lambda>x. 0)(''x'' := 5))"
+  \<comment> \<open>"(10, _)" :: "int \<times> (char list \<Rightarrow> int)"
+        - here arises another problem:
+          when there are multiple increments for the same variable,
+          should we apply the side effect immediately when meet one instance,
+          or apply them all only after the evaluation for the entire expression?
+          i.e. should this expression be evaluated to 10 or 11?
+
+          Immediate, left-to-right (the exercise convention, like Java):
+          first @{text "x++"} yields 5 and sets @{text "x = 6"}; the second
+          then yields 6 and sets @{text "x = 7"}.  So 11, not 10.
+          Line 228 still gets 10 because both @{text fst}s use the original
+          @{text s}; @{text e2}'s value must use @{term "snd (aval3 e1 s)"}
+          as well (or @{text case}/@{text let}, evaluating each child once).\<close>
+value "snd (aval3 (Plus (Increment ''x'') (Increment ''x'')) ((\<lambda>x. 0)(''x'' := 5))) ''x''"
+  \<comment> \<open>With line 228 the final @{text x} is 7 (state is threaded).
+      The old equation on line 226 discarded updates and left @{text "x = 5"}.\<close>
 end
