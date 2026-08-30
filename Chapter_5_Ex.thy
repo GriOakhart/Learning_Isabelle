@@ -367,4 +367,20 @@ fun inline :: "lexp \<Rightarrow> aexp" where
       first argument is the name to replace, not an expression.
       @{text "inline (Vl x)"} is @{text "aexp.V x"} --- that would be a
       replacement term, not a name.\<close>
+
+(* Correctness of inline for evaluation: *)
+lemma "aval (inline exp) s = lval exp s"
+  apply (induction exp arbitrary: s rule: inline.induct)
+     apply (simp_all add: substitution_lemma)
+      \<comment> \<open>substitution lemma should be add manually
+      goal (1 subgoal):
+       1. \<And>x e1 e2.
+             aval (inline e1) s = lval e1 s \<Longrightarrow>
+             aval (inline e2) s = lval e2 s \<Longrightarrow>
+             aval (inline e2) (s(x := lval e1 s)) =
+             lval e2 (s(x := lval e1 s))
+      - need to generalize s!
+      hence add arbitrary: s in induction\<close>
+  done
+
 end
