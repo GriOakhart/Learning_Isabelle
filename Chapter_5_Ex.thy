@@ -261,4 +261,54 @@ value "aval3 (Plus (Increment ''x'') (Increment ''x'')) ((\<lambda>x. 0)(''x'' :
 value "snd (aval3 (Plus (Increment ''x'') (Increment ''x'')) ((\<lambda>x. 0)(''x'' := 5))) ''x''"
   \<comment> \<open>With line 228 the final @{text x} is 7 (state is threaded).
       The old equation on line 226 discarded updates and left @{text "x = 5"}.\<close>
+
+datatype aexp4 = N int | V vname | Increment vname | Plus aexp4 aexp4 | Divide aexp4 aexp4
+
+fun aval4 :: "aexp4 \<Rightarrow> state \<Rightarrow> (val \<times> state) option" where
+  "aval4 (N m) s = Some (m, s)"
+| "aval4 (V x) s = Some (s x, s)"
+| "aval4 (Increment x) s = Some (s x, s(x := s x + 1))"
+(*
+| "aval4 (Plus e1 e2) s = (
+    case aval4 e1 s of
+      None \<Rightarrow> None |
+      Some (v1, t1) \<Rightarrow>
+        case aval4 e2 t1 of
+          None \<Rightarrow> None |
+          Some (v2, t2) \<Rightarrow> Some (v1 + v2, t2))" *)
+    \<comment> \<open>@{text "|"} is not scoped by indentation: a @{text "\<Rightarrow>"} term
+        stops at the next @{text "|"}.  The inner @{text case} therefore
+        only gets @{text "None \<Rightarrow> None"}; @{text "Some (v2, t2)"} is a
+        third outer clause --- redundant (covered by @{text "Some (v1, t1)"})
+        and the inner @{text case} is incomplete.  Parenthesize the inner
+        @{text case}.\<close>
+| "aval4 (Plus e1 e2) s = (
+    case aval4 e1 s of
+      None \<Rightarrow> None
+    | Some (v1, t1) \<Rightarrow>
+        (case aval4 e2 t1 of
+          None \<Rightarrow> None
+        | Some (v2, t2) \<Rightarrow> Some (v1 + v2, t2)))"
+(*
+| "aval4 (Divide e1 e2) s = (
+    case aval4 e1 s of
+      None \<Rightarrow> None |
+      Some (v1, t1) \<Rightarrow>
+        case aval4 e2 s of
+          None \<Rightarrow> None |
+          Some (0, t2) \<Rightarrow> None |  \<comment> \<open>partiality of division: the divider is 0\<close>
+          Some (v2, t2) \<Rightarrow> Some (v1 div v2, t2))" *)
+| "aval4 (Divide e1 e2) s = (
+    case aval4 e1 s of
+      None \<Rightarrow> None
+    | Some (v1, t1) \<Rightarrow>
+        (case aval4 e2 t1 of
+          None \<Rightarrow> None
+        | Some (v2, t2) \<Rightarrow>
+            if v2 = 0 then None else Some (v1 div v2, t2)))"
+  \<comment> \<open>Traps:
+      parenthesize a nested @{text case} (see @{const Plus} above);
+      match @{text "Some (v, t)"}, not a bare pair;
+      thread @{text t1} into @{text e2}, not the original @{text s};
+      test zero with @{text "if v2 = 0"} --- @{text "Some (0, t2)"} is not a constructor split.\<close>
 end

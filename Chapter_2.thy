@@ -166,7 +166,11 @@ lemma mirror_02: "mirror (mirror tree) = tree"
 
 fun lookup :: "('a * 'b) list \<Rightarrow> 'a \<Rightarrow> 'b option" where
   "lookup Nil m = None"
-| "lookup ((x, y) # xs) m = (if x = m then (Some y) else lookup xs m)"
+(* | "lookup ((x, y) # xs) m = (if x = m then (Some y) else lookup xs m)" *)
+| "lookup ((x, y) # xs) m = (
+    case x = m of
+      True \<Rightarrow> Some y | 
+      False \<Rightarrow> lookup xs m)"
   \<comment> \<open>List of pairs (Cartesian product):
       write ('a * 'b) list in the type (not 'a * 'b list,
       which parses as 'a * ('b list));
