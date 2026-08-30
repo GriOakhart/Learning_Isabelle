@@ -5,7 +5,8 @@ A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working thr
 programming and proving.
 
 **Current coverage:** Chapters 2–4 complete (tutorial notes through section 4.4.7;
-exercises 2.1–2.11, 3.1–3.5, and 4.1–4.7).
+exercises 2.1–2.11, 3.1–3.5, and 4.1–4.7). Chapter 5 notes cover arithmetic
+expressions (section 5.1) and boolean syntax/`bval`; exercises 5.1–5.6 are done.
 
 The project is organized so tutorial notes and chapter exercises live in separate
 theories, with a small playground for short-lived experiments and companion
@@ -42,6 +43,8 @@ isabelle build -D .
 | `Chapter_4.thy` | Tutorial notes for Chapter 4 (Isar) |
 | `Chapter_4_Ex.thy` | Chapter 4 exercises 4.1–4.6 |
 | `Chapter_4_Ex_7.thy` | Exercise 4.7 (balanced parentheses / grammar `S`) |
+| `Chapter_5.thy` | Tutorial notes for Chapter 5 (IMP arithmetic / boolean expressions) |
+| `Chapter_5_Ex.thy` | Chapter 5 exercises 5.1–5.6 (imports `Chapter_5`) |
 | `Rule_Induction_Notes.thy` | What rule induction is: last lemma of 4.4.7, least fixed points, computation induction |
 | `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
@@ -50,7 +53,7 @@ isabelle build -D .
 Session theories (build order from `ROOT`):
 
 ```text
-Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_4 → Chapter_4_Ex → Chapter_4_Ex_7 → Rule_Induction_Notes → Star_Simp_Notes
+Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_4 → Chapter_4_Ex → Chapter_4_Ex_7 → Chapter_5 → Chapter_5_Ex → Rule_Induction_Notes → Star_Simp_Notes
 ```
 
 ### Dependencies
@@ -60,6 +63,8 @@ Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_
 - `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
 - `Chapter_4` and `Chapter_4_Ex` are independent of earlier chapters (import `Main` only; redefine `ev` / `evn` / `star` / `iter` locally)
 - `Chapter_4_Ex_7` is independent of earlier chapters (imports `Main` only; redefines `alpha` / `S` from Exercise 3.5 locally)
+- `Chapter_5` is independent of earlier chapters (imports `Main` only; defines `aexp` / `aval` / `asimp` / `bexp` / `bval`)
+- `Chapter_5_Ex` → `Chapter_5` (`aexp`, `aval`, `asimp_const`, `plus`, `aval_plus`)
 - `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
 - `Rule_Induction_Notes` → `Chapter_4` (`ev`, `evn`, `ev.induct`)
 
@@ -211,6 +216,39 @@ premise first and the search can diverge. `metis` backtracks, so premise order d
 not matter. A swapped-premise copy of `star'.step` makes the mirror `simp` one-liner
 succeed.
 
+## Progress — Chapter 5
+
+IMP-style expressions: syntax, evaluation, and local optimizations. Notes and
+exercises are independent of Chapters 2–4 (they import `Main` only, then each
+other).
+
+### `Chapter_5.thy` (tutorial notes)
+
+| Section | Topics |
+|---------|--------|
+| **5.1.1** Syntax | `vname` as `string`; datatype `aexp` (`N` / `V` / `Plus`); string literals `''y''` vs free variables |
+| **5.1.2** Semantics | `val`, `state`; `aval`; function update `f(a := b)`; sample states `s0` / `s1` |
+| **5.1.3** Constant folding | Naive `asimp_const'` misses nested folds; `asimp_const` cases on simplified children; correctness via `auto split: aexp.split` |
+| | Smart constructor `plus` (fold `N+N`, drop `N 0`); `aval_plus` by `plus.induct`; recursive `asimp` |
+| **Boolean expressions** | Datatype `bexp` (`Bc` / `Not` / `And` / `Less`); `bval` (no boolean variables) |
+
+Recurring proof habits recorded in this theory:
+
+- `split: aexp.split` turns a `case` on `aexp` into a constructor conjunction for `auto`.
+- Local optimizations belong in a smart constructor (`plus`); the recursive pass (`asimp`) only traverses.
+- `definition` equations are not simp rules; `fun` equations are.
+
+### `Chapter_5_Ex.thy` (Chapter 5 exercises)
+
+| Exercise | Summary |
+|----------|---------|
+| **5.1** | Predicate `optimal` (no `Plus (N _) (N _)` subtree); `optimal (asimp_const exp)` by induction on `exp` with `split: aexp.split`. `optimal.induct` / `asimp_const.induct` are the wrong hooks |
+| **5.2** | Push constants to the top: `sum_const`, `aexp_skeleton` (via `plus`, not `Plus`), `full_asimp`; leftover `N 0` needs `plus_N0_or_no_constant`; unfold `full_asimp_def` and reuse `aval_plus` |
+| **5.3** | `subst x a e`; substitution lemma `aval (subst x a exp) s = aval exp (s(x := aval a s))`; corollary that equivalent replacements stay equivalent |
+| **5.4** | `aexp2` with `Multiply`; smart constructors `plus2` / `multiply2` (fold `0`/`1` and `N*N`); `asimp2`. A `full_asimp`-style gatherer would need a polynomial normal form, not another homework function |
+| **5.5** | Post-increment `aexp3` / `aval3` returns `val × state`, threaded left-to-right (`x++ + x++` is 11, not 10). Do not bind the result state as `s1` (clashes with the constant in `Chapter_5`). `aexp4` / `aval4` adds `Divide` and partiality (`option`); parenthesize nested `case`, thread `t1` into `e2`, test zero with `if` |
+| **5.6** | `lexp` / `LET` is local scope, not a leftover state change. `lval` uses `s(x := lval e1 s)` — a constant `λx. …` shadows the name and drops the rest of `s`. `inline` compiles `LET` via `subst`; correctness needs `arbitrary: s` and the substitution lemma |
+
 ## `Tests.thy`
 
 Scratch space only — not part of the tutorial narrative:
@@ -241,6 +279,8 @@ isabelle jedit -d . -l Learning_Isabelle Chapter_3_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Chapter_4_Ex_7.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_5.thy
+isabelle jedit -d . -l Learning_Isabelle Chapter_5_Ex.thy
 isabelle jedit -d . -l Learning_Isabelle Rule_Induction_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Star_Simp_Notes.thy
 isabelle jedit -d . -l Learning_Isabelle Tests.thy
