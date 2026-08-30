@@ -329,8 +329,15 @@ fun lval :: "lexp \<Rightarrow> state \<Rightarrow> val" where
   "lval (Nl m) s = m"
 | "lval (Vl x) s = s x"
 | "lval (Plusl e1 e2) s = lval e1 s + lval e2 s"
-| "lval (LET x e1 e2) s = lval e2 (\<lambda>x. lval e1 s)"
-  \<comment> \<open>first evaluate e1, then bind it to x, to evaluate e2\<close>
+(*
+| "lval (LET x e1 e2) s = lval e2 (\<lambda>x. lval e1 s)" *)
+  \<comment> \<open>first evaluate e1, then bind it to x, to evaluate e2.
+      However, this is INCORRECT:
+      @{text "\<lambda>x. lval e1 s"} is constant --- the binder shadows the
+      @{text vname} and the body ignores it --- so every name maps to
+      @{text "lval e1 s"} and the rest of @{text s} is lost.
+      Need @{text "s(x := lval e1 s)"}.\<close>
+| "lval (LET x e1 e2) s = lval e2 (s(x := lval e1 s))"
 
 value "lval (LET ''x'' (Nl 3) (Plusl (Vl ''x'') (Nl 1))) ((\<lambda>x. 0)(''x'' := 5))"
   \<comment> \<open>"4" :: "int"
@@ -344,4 +351,10 @@ value "lval (LET ''x'' (Nl 1) (LET ''x'' (Nl 2) (Vl ''x''))) ((\<lambda>x. 0)(''
 value "lval (LET ''x'' (Nl 10) (Plusl (Vl ''x'') (LET ''x'' (Nl 1) (Vl ''x'')))) ((\<lambda>x. 0)(''x'' := 5))"
   \<comment> \<open>"11" :: "int"
         - an inner binding does not affect an outer use of the same name\<close>
+
+value "lval (LET ''x'' (Nl 3) (Plusl (Vl ''x'') (Vl ''y'')))
+           ((\<lambda>_. 0)(''y'' := 10))"
+  \<comment> \<open>"6" :: "int"
+        - this yields incorrect answer using the equation in line 332\<close>
+
 end
