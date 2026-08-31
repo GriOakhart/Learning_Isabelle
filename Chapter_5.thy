@@ -178,7 +178,7 @@ lemma "aval (asimp exp) s = aval exp s"
     apply(simp_all add: aval_plus)
   done
 
-section \<open>Exercise 5.2 Boolean Expressions\<close>
+section \<open>5.2 Boolean Expressions\<close>
 
 datatype bexp = Bc bool | Not bexp | And bexp bexp | Less aexp aexp
   \<comment> \<open>Note a  comparison of arithmetic expressions for less-than,
@@ -189,4 +189,36 @@ fun bval :: "bexp \<Rightarrow> state \<Rightarrow> bool" where
 | "bval (Not e) s = (\<not> bval e s)"
 | "bval (And e1 e2) s = (bval e1 s \<and> bval e2 s)"
 | "bval (Less e1 e2) s = (aval e1 s < aval e2 s)"
+
+subsection \<open>5.2.1 Constant Folding\<close>
+
+text \<open>
+  Define optimizing versions of the constructors,
+  like we defined plus in 5.1 for constructor Plus:\<close>
+fun not :: "bexp \<Rightarrow> bexp" where
+  "not (Bc False) = Bc True"
+| "not (Bc True) = Bc False"
+| "not e = Not e"
+
+fun "and" :: "bexp \<Rightarrow> bexp \<Rightarrow> bexp" where
+  \<comment> \<open>and is a keyword; the quotes make it a legal identifier\<close>
+  "and (Bc False) e = Bc False"
+| "and e (Bc False) = Bc False"
+| "and (Bc True) e = e"
+| "and e (Bc True) = e"
+| "and e1 e2 = And e1 e2"
+
+fun less :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
+  "less (N n1) (N n2) = Bc (n1 < n2)"
+| "less e1 e2 = Less e1 e2"
+
+fun bsimp :: "bexp \<Rightarrow> bexp" where
+  "bsimp (Bc v) = Bc v"
+| "bsimp (Not e) = not (bsimp e)"
+| "bsimp (And e1 e2) = and (bsimp e1) (bsimp e2)"
+| "bsimp (Less e1 e2) = less (asimp e1) (asimp e2)"
+  \<comment> \<open>Less holds two aexp, not bexp: asimp them, then rebuild with less\<close>
+
+value "bsimp (Not (Not (Bc True)))"
+  \<comment> \<open>"Bc True" :: "bexp"\<close>
 end
