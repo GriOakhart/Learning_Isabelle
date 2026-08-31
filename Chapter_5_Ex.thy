@@ -389,10 +389,64 @@ datatype aexp = N int | V vname | Plus aexp aexp
 datatype bexp = Bc bool | Not bexp | And bexp bexp | Less aexp aexp *)
 fun Eq :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
   "Eq e1 e2 = And (Not (Less e1 e2)) (Not (Less e2 e1))"
+    \<comment> \<open>The book asks to show @{text "="} and @{text "\<le>"} are
+        definable from the existing @{typ bexp} constructors
+        --- not to add constructors or recurse on @{typ aexp}.
+        @{const Eq} is a smart constructor: on @{typ int} (a linear order),
+        @{text "x = y"} iff @{text "\<not>(x < y) \<and> \<not>(y < x)"}.\<close>
 
 fun Le :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
   "Le e1 e2 = Not (Less e2 e1)"
+    \<comment> \<open>Same idea: @{text "x \<le> y"} iff @{text "\<not>(y < x)"}.\<close>
 
+lemma "bval (Eq e1 e2) s = (aval e1 s = aval e2 s)"
+(*  the detailed proof is too crazy...
+  apply (simp only: Eq.simps bval.simps)
+    \<comment> \<open>@{const Eq} and @{const bval} only --- no order lemmas yet:
+         (\<not> aval e1 s < aval e2 s \<and> \<not> aval e2 s < aval e1 s) =
+         (aval e1 s = aval e2 s)\<close>
+  apply (rule iffI)
+   apply (erule conjE)
+   apply (drule leI)+
+     \<comment> \<open>@{thm leI}: @{text "\<not> x < y"} implies @{text "y \<le> x"}, so
+          @{text "e2 \<le> e1"} and @{text "e1 \<le> e2"}\<close>
+   apply (rule antisym)
+    apply assumption
+    apply assumption
+  apply (rule conjI)
+   apply (erule ssubst[where P="\<lambda>x. \<not> x < aval e2 s"])
+   apply (rule less_irrefl)
+  apply (erule ssubst[where P="\<lambda>x. \<not> aval e2 s < x"])
+  apply (rule less_irrefl)
+  done *)
+  by auto
 
+lemma "bval (Le e1 e2) s = (aval e1 s \<le> aval e2 s)"
+  by auto
 
+section \<open>Exercise 5.8\<close>
+
+datatype ifexp = Bc2 bool | If ifexp ifexp ifexp | Less2 aexp aexp
+
+fun ifval :: "ifexp \<Rightarrow> state \<Rightarrow> bool" where
+  "ifval (Bc2 v) s = v"
+| "ifval (If e1 e2 e3) s = (if (ifval e1 s) then (ifval e2 s) else (ifval e3 s))"
+| "ifval (Less2 e1 e2) s = (aval e1 s < aval e2 s)"
+
+fun b2ifexp :: "bexp \<Rightarrow> ifexp" where
+  "b2ifexp (Bc v) = (Bc2 v)"
+| "b2ifexp (Not e) = (If (b2ifexp e) (Bc2 False) (Bc2 True))"
+  \<comment> \<open>note: exp = if (exp) then True else False, - exp is also boolean expression
+      - evaluated to True/False\<close>
+| "b2ifexp (And e1 e2) = (If (b2ifexp e1) (If (b2ifexp e2) (Bc2 True) (Bc2 False)) (Bc2 False))"
+(* | "b2ifexp (Less e1 e2) = (Less2 (b2ifexp e1) (b2ifexp e2))" *)
+    \<comment> \<open>arguments for both Less and Less2 are aexp!\<close>
+| "b2ifexp (Less e1 e2) = (Less2 e1 e2)"
+
+fun if2bexp :: "ifexp \<Rightarrow> bexp" where
+  "if2bexp (Bc2 v) = (Bc v)"
+| "if2bexp (If e1 e2 e3) =
+    (And (Not (And (if2bexp e1) (Not (if2bexp e2)))) (Not (And (Not (if2bexp e1)) (Not (if2bexp e3)))))"
+  \<comment> \<open>(if p then q else r) = (p \<rightarrow> q) \<and> (\<not>p \<rightarrow> r)\<close>
+| "if2bexp (Less2 e1 e2) = (Less e1 e2)"
 end
