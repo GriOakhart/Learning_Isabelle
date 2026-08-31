@@ -443,10 +443,23 @@ fun b2ifexp :: "bexp \<Rightarrow> ifexp" where
     \<comment> \<open>arguments for both Less and Less2 are aexp!\<close>
 | "b2ifexp (Less e1 e2) = (Less2 e1 e2)"
 
+(* Correctness for b2ifexp: *)
+lemma "ifval (b2ifexp e) s = bval e s"
+  apply (induction e rule: b2ifexp.induct)
+     apply (simp_all)
+  done
+
 fun if2bexp :: "ifexp \<Rightarrow> bexp" where
   "if2bexp (Bc2 v) = (Bc v)"
 | "if2bexp (If e1 e2 e3) =
     (And (Not (And (if2bexp e1) (Not (if2bexp e2)))) (Not (And (Not (if2bexp e1)) (Not (if2bexp e3)))))"
   \<comment> \<open>(if p then q else r) = (p \<rightarrow> q) \<and> (\<not>p \<rightarrow> r)\<close>
 | "if2bexp (Less2 e1 e2) = (Less e1 e2)"
+
+(* Correctness for if2bexp: *)
+lemma "bval (if2bexp e) s = ifval e s"
+  apply (induction e rule: if2bexp.induct)
+    apply (simp_all)
+  done
+
 end
