@@ -383,4 +383,16 @@ lemma "aval (inline exp) s = lval exp s"
       hence add arbitrary: s in induction\<close>
   done
 
+section \<open>Exercise 5.7\<close>
+(*
+datatype aexp = N int | V vname | Plus aexp aexp
+datatype bexp = Bc bool | Not bexp | And bexp bexp | Less aexp aexp *)
+fun Eq :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
+  "Eq e1 e2 = And (Not (Less e1 e2)) (Not (Less e2 e1))"
+
+fun Le :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
+  "Le e1 e2 = Not (Less e2 e1)"
+
+
+
 end
