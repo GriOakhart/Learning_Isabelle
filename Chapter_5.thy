@@ -196,8 +196,14 @@ text \<open>
   Define optimizing versions of the constructors,
   like we defined plus in 5.1 for constructor Plus:\<close>
 fun not :: "bexp \<Rightarrow> bexp" where
+(* from the book:
   "not (Bc False) = Bc True"
 | "not (Bc True) = Bc False"
+| "not e = Not e" *)
+  "not (Bc v) = Bc (\<not> v)"
+  \<comment> \<open>can merge: same as the book's two Bc equations: v is already a bool\<close>
+(* | "not (Not e) = e" *)
+  \<comment> \<open>NOT needed, optional extra law: the catch-all already covers Not\<close>
 | "not e = Not e"
 
 fun "and" :: "bexp \<Rightarrow> bexp \<Rightarrow> bexp" where
@@ -206,11 +212,16 @@ fun "and" :: "bexp \<Rightarrow> bexp \<Rightarrow> bexp" where
 | "and e (Bc False) = Bc False"
 | "and (Bc True) e = e"
 | "and e (Bc True) = e"
+(*
+  "and (Bc v) e = (if v then e else (Bc False))"
+| "and e (Bc v) = (if v then e else (Bc False))" *)
+  \<comment> \<open>patterns are better: they split True/False directly and give unconditional simp rules\<close>
 | "and e1 e2 = And e1 e2"
 
 fun less :: "aexp \<Rightarrow> aexp \<Rightarrow> bexp" where
   "less (N n1) (N n2) = Bc (n1 < n2)"
 | "less e1 e2 = Less e1 e2"
+  \<comment> \<open>optimizing Less: only N n1 < N n2 is a known bool; a V still needs the state\<close>
 
 fun bsimp :: "bexp \<Rightarrow> bexp" where
   "bsimp (Bc v) = Bc v"
@@ -219,6 +230,17 @@ fun bsimp :: "bexp \<Rightarrow> bexp" where
 | "bsimp (Less e1 e2) = less (asimp e1) (asimp e2)"
   \<comment> \<open>Less holds two aexp, not bexp: asimp them, then rebuild with less\<close>
 
-value "bsimp (Not (Not (Bc True)))"
-  \<comment> \<open>"Bc True" :: "bexp"\<close>
+value "bsimp (Not (Not (Less (V ''x'') (N 0))))"
+  \<comment> \<open>"bexp.Not (bexp.Not (Less (V ''x'') (N 0)))" :: "bexp"
+      catch-all: no not (Not e) = e\<close>
+value "bsimp (And (Less (V ''x'') (N 1)) (Less (V ''y'') (N 2)))"
+  \<comment> \<open>"And (Less (V ''x'') (N 1)) (Less (V ''y'') (N 2))" :: "bexp"\<close>
+value "bsimp (Less (Plus (N 1) (N 2)) (N 4))"
+  \<comment> \<open>"Bc True" :: "bexp"
+      asimp folds Plus (N 1) (N 2) to N 3, then less\<close>
+value "bsimp (Less (Plus (V ''x'') (N 0)) (N 5))"
+  \<comment> \<open>"Less (V ''x'') (N 5)" :: "bexp"
+      asimp drops N 0, but V ''x'' still blocks less\<close>
+value "bsimp (And (Less (Plus (N 2) (N 3)) (N 4)) (Bc True))"
+  \<comment> \<open>"Bc False" :: "bexp"\<close>
 end
