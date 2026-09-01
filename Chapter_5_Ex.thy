@@ -462,4 +462,45 @@ lemma "bval (if2bexp e) s = ifval e s"
     apply (simp_all)
   done
 
+section \<open>Exercise 5.9\<close>
+text \<open>purely boolean expression\<close>
+
+datatype pbexp = VAR vname | NEG pbexp | AND pbexp pbexp | OR pbexp pbexp
+(* where variables range over values of type bool. *)
+
+fun pbval :: "pbexp \<Rightarrow> (vname \<Rightarrow> bool) \<Rightarrow> bool" where
+  \<comment> \<open>the original state is vname \<Rightarrow> val, not fits here\<close>
+  "pbval (VAR x) s = s x"
+| "pbval (NEG e) s = (\<not> pbval e s)"
+| "pbval (AND e1 e2) s = (pbval e1 s \<and> pbval e2 s)"
+| "pbval (OR e1 e2) s = (pbval e1 s \<or> pbval e2 s)"
+
+(* check whether a boolean expression is in NNF (negation normal form): *)
+fun is_nnf :: "pbexp \<Rightarrow> bool" where
+  "is_nnf (VAR x) = True"
+| "is_nnf (NEG (VAR x)) = True"
+| "is_nnf (NEG e) = False"
+| "is_nnf (AND e1 e2) = (is_nnf e1 \<and> is_nnf e2)"
+| "is_nnf (OR e1 e2) = (is_nnf e1 \<and> is_nnf e2)"
+
+value "is_nnf (NEG (VAR x))"
+  \<comment> \<open>"True" :: "bool"\<close>
+value "is_nnf (NEG (NEG (VAR x)))"
+  \<comment> \<open>"False" :: "bool"\<close>
+
+(* convert a pbexp into NNF by pushing: *)
+fun nnf :: "pbexp \<Rightarrow> pbexp" where
+  "nnf (VAR x) = (VAR x)"
+| "nnf (NEG (VAR x)) = (NEG (VAR x))"
+  \<comment> \<open>pushing cases:\<close>
+| "nnf (NEG (NEG e)) = nnf e"
+| "nnf (NEG (AND e1 e2)) = (OR (nnf (NEG e1)) (nnf (NEG e2)))"
+  \<comment> \<open>Recur as @{text "nnf (NEG ei)"}, not @{text "NEG (nnf ei)"}:
+      De Morgan leaves a @{const NEG} on each child; those leftovers
+      still have to be pushed inward.\<close>
+| "nnf (NEG (OR e1 e2)) = (AND (nnf (NEG e1)) (nnf (NEG e2)))"
+  \<comment> \<open>other cases: (not pushing)\<close>
+| "nnf (AND e1 e2) = AND (nnf e1) (nnf e2)"
+| "nnf (OR e1 e2) = OR (nnf e1) (nnf e2)"
+
 end
