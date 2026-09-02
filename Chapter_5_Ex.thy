@@ -503,4 +503,32 @@ fun nnf :: "pbexp \<Rightarrow> pbexp" where
 | "nnf (AND e1 e2) = AND (nnf e1) (nnf e2)"
 | "nnf (OR e1 e2) = OR (nnf e1) (nnf e2)"
 
+(* nnf preserves the value: *)
+lemma "pbval (nnf e) s = pbval e s"
+  apply (induction e rule: nnf.induct)
+        apply (simp_all)
+  done
+
+(* nnf returns a NNF: *)
+lemma "is_nnf (nnf e)"
+  apply (induction e rule: nnf.induct)
+        apply (simp_all)
+  done
+
+(* DNF = NNF and no OR occurs below an AND: *)
+fun is_dnf :: "pbexp \<Rightarrow> bool" where
+  "is_dnf (VAR x) = True"
+| "is_dnf (NEG (VAR x)) = True"
+| "is_dnf (NEG e) = False"
+  \<comment> \<open>Immediate @{const OR} child of @{const AND}: rejected.
+      A deeper @{const OR} is caught by an inner @{const AND}
+      (or by @{const NEG} of a non-variable, which is not NNF).\<close>
+| "is_dnf (AND (OR e1 e2) e3) = False"
+| "is_dnf (AND e1 (OR e2 e3)) = False"
+  \<comment> \<open>Safe to recurse: neither child is an @{const OR}, so any
+      leftover @{const OR} sits under a nested @{const AND}.\<close>
+| "is_dnf (AND e1 e2) = (is_dnf e1 \<and> is_dnf e2)"
+  \<comment> \<open>@{const OR} may sit above @{const AND}; just check the children.\<close>
+| "is_dnf (OR e1 e2) = (is_dnf e1 \<and> is_dnf e2)"
+
 end
