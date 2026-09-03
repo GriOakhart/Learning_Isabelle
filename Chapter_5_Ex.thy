@@ -604,4 +604,33 @@ lemma "pbval (dnf_of_nnf e) s = pbval e s"
           - we prove a more generalized lemma for this case\<close>
   done
 
+(* distribution preserves DNF: *)
+lemma dist_dnf: "is_dnf e1 \<Longrightarrow> is_dnf e2 \<Longrightarrow> is_dnf (distribute_AND e1 e2)"
+  apply (induction e1 e2 rule: distribute_AND.induct)  \<comment> \<open>analog to line 109\<close>
+    \<comment> \<open>Not two independent inductions: @{text "f.induct"} for a
+        two-argument @{text fun} is computation induction on both
+        arguments at once (same hook as @{text "plus.induct"}).
+        Name @{text e1} @{text e2}: the goal is an implication, so a
+        bare @{text "induction rule: distribute_AND.induct"} latches
+        onto the wrong @{const is_dnf} (unlike @{text dist_val},
+        whose conclusion is already an equation on
+        @{const distribute_AND}).\<close>
+              apply (simp_all)
+    \<comment> \<open>@{const OR} cases unfold @{text "is_dnf (OR ...)"} and use
+        the IHs. Last case is @{const AND} of two non-@{const OR}
+        DNFs, so the third @{const is_dnf}/@{const AND} equation
+        applies.\<close>
+  done
+
+lemma "is_nnf e \<Longrightarrow> is_dnf (dnf_of_nnf e)"
+  apply (induction e rule: is_nnf.induct)
+        apply (simp_all add: dist_dnf)
+          \<comment> \<open>proof (prove)
+              goal (1 subgoal):
+               1. \<And>e1 e2.
+                     is_dnf (dnf_of_nnf e1) \<Longrightarrow>
+                     is_dnf (dnf_of_nnf e2) \<Longrightarrow>
+                     is_nnf e1 \<and> is_nnf e2 \<Longrightarrow> is_dnf (distribute_AND (dnf_of_nnf e1) (dnf_of_nnf e2))\<close>
+  done
+
 end
