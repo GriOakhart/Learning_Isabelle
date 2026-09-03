@@ -531,4 +531,59 @@ fun is_dnf :: "pbexp \<Rightarrow> bool" where
   \<comment> \<open>@{const OR} may sit above @{const AND}; just check the children.\<close>
 | "is_dnf (OR e1 e2) = (is_dnf e1 \<and> is_dnf e2)"
 
+(* Incomplete converter: a 4-way @{text case} only splits the
+   outermost @{const OR} of each converted child. *)
+fun dnf_of_nnf_incorrect :: "pbexp \<Rightarrow> pbexp" where
+  "dnf_of_nnf_incorrect (VAR x) = (VAR x)"
+| "dnf_of_nnf_incorrect (NEG e) = (NEG e)"
+| "dnf_of_nnf_incorrect (AND e1 e2) = (
+    case (dnf_of_nnf_incorrect e1, dnf_of_nnf_incorrect e2) of
+      \<comment> \<open>Convert the children first, then match their roots.
+          Nested disjunctions are never walked, so an inner
+          @{const OR} can remain under this @{const AND}.\<close>
+      ((OR e3 e4), (OR e5 e6)) \<Rightarrow> (OR (OR (AND e3 e5) (AND e3 e6)) (OR (AND e4 e5) (AND e4 e6)))
+    | ((OR e3 e4), e5) \<Rightarrow> (OR (AND e3 e5) (AND e4 e5))
+    | (e3, (OR e4 e5)) \<Rightarrow> (OR (AND e3 e4) (AND e3 e5))
+    | (e3, e4) \<Rightarrow> (AND e3 e4)
+)"
+| "dnf_of_nnf_incorrect (OR e1 e2) = (OR (dnf_of_nnf_incorrect e1) (dnf_of_nnf_incorrect e2))"
+
+value "dnf_of_nnf_incorrect (AND (OR (VAR ''x'') (VAR ''y'')) (OR (VAR ''u'') (VAR ''v'')))"
+  \<comment> \<open>"OR (OR (AND (VAR ''x'') (VAR ''u'')) (AND (VAR ''x'') (VAR ''v'')))
+  (OR (AND (VAR ''y'') (VAR ''u'')) (AND (VAR ''y'') (VAR ''v'')))"
+  :: "pbexp"
+      Happens to be DNF: each side is a single @{const OR} of literals.\<close>
+
+value "dnf_of_nnf_incorrect (AND (OR (OR (VAR ''a'') (VAR ''b'')) (VAR ''c'')) (VAR ''d''))"
+  \<comment> \<open>"OR (AND (OR (VAR ''a'') (VAR ''b'')) (VAR ''d'')) (AND (VAR ''c'') (VAR ''d''))"
+  :: "pbexp"
+      Not DNF: @{text "AND (OR a b) d"} is left intact.\<close>
+
+(* Push @{const AND} through every top-level @{const OR} in both arguments: *)
+fun distribute_AND :: "pbexp \<Rightarrow> pbexp \<Rightarrow> pbexp" where
+  "distribute_AND (OR e1 e2) e3 = OR (distribute_AND e1 e3) (distribute_AND e2 e3)"
+  \<comment> \<open>Left @{const OR} first, so @{text "distribute_AND (OR _ _) (OR _ _)"}
+      splits the left and then the right on the recursive calls.\<close>
+| "distribute_AND e1 (OR e2 e3) = OR (distribute_AND e1 e2) (distribute_AND e1 e3)"
+| "distribute_AND e1 e2 = AND e1 e2"
+  \<comment> \<open>Neither root is @{const OR}. If both arguments are already DNF,
+      they contain no @{const OR} at all, so this @{const AND} is a cube.
+      @{const dnf_of_nnf} supplies that guarantee by converting first.\<close>
+
+fun dnf_of_nnf :: "pbexp \<Rightarrow> pbexp" where
+  "dnf_of_nnf (VAR x) = (VAR x)"
+| "dnf_of_nnf (NEG e) = (NEG e)"
+  \<comment> \<open>If the input is NNF, @{text e} is already a variable.\<close>
+| "dnf_of_nnf (AND e1 e2) = distribute_AND (dnf_of_nnf e1) (dnf_of_nnf e2)"
+  \<comment> \<open>Bottom-up: convert both children to DNF, then distribute
+      this @{const AND} over their disjuncts.\<close>
+| "dnf_of_nnf (OR e1 e2) = OR (dnf_of_nnf e1) (dnf_of_nnf e2)"
+  \<comment> \<open>An @{const OR} of DNFs is already DNF.\<close>
+
+value "dnf_of_nnf (AND (OR (OR (VAR ''a'') (VAR ''b'')) (VAR ''c'')) (VAR ''d''))"
+  \<comment> \<open>"OR (OR (AND (VAR ''a'') (VAR ''d'')) (AND (VAR ''b'') (VAR ''d'')))
+  (AND (VAR ''c'') (VAR ''d''))"
+  :: "pbexp"
+      Same nested-OR input, now fully distributed.\<close>
+
 end
