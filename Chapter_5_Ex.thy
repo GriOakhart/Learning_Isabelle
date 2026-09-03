@@ -568,7 +568,7 @@ fun distribute_AND :: "pbexp \<Rightarrow> pbexp \<Rightarrow> pbexp" where
 | "distribute_AND e1 e2 = AND e1 e2"
   \<comment> \<open>Neither root is @{const OR}. If both arguments are already DNF,
       they contain no @{const OR} at all, so this @{const AND} is a cube.
-      @{const dnf_of_nnf} supplies that guarantee by converting first.\<close>
+      @{text dnf_of_nnf} supplies that guarantee by converting first.\<close>
 
 fun dnf_of_nnf :: "pbexp \<Rightarrow> pbexp" where
   "dnf_of_nnf (VAR x) = (VAR x)"
@@ -585,5 +585,23 @@ value "dnf_of_nnf (AND (OR (OR (VAR ''a'') (VAR ''b'')) (VAR ''c'')) (VAR ''d'')
   (AND (VAR ''c'') (VAR ''d''))"
   :: "pbexp"
       Same nested-OR input, now fully distributed.\<close>
+
+(* distribute_AND preserves the value: *)
+lemma dist_val: "pbval (distribute_AND e1 e2) s = ((pbval e1 s) \<and> (pbval e2 s))"
+  apply (induction rule: distribute_AND.induct)
+              apply (auto)
+  done
+
+lemma "pbval (dnf_of_nnf e) s = pbval e s"
+  apply (induction e)
+     apply (simp_all add: dist_val)
+      \<comment> \<open>proof (prove)
+          goal (1 subgoal):
+           1. \<And>e1 e2.
+                 pbval (dnf_of_nnf e1) s = pbval e1 s \<Longrightarrow>
+                 pbval (dnf_of_nnf e2) s = pbval e2 s \<Longrightarrow>
+                 pbval (distribute_AND (dnf_of_nnf e1) (dnf_of_nnf e2)) s = (pbval e1 s \<and> pbval e2 s)
+          - we prove a more generalized lemma for this case\<close>
+  done
 
 end
