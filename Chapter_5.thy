@@ -243,4 +243,47 @@ value "bsimp (Less (Plus (V ''x'') (N 0)) (N 5))"
       asimp drops N 0, but V ''x'' still blocks less\<close>
 value "bsimp (And (Less (Plus (N 2) (N 3)) (N 4)) (Bc True))"
   \<comment> \<open>"Bc False" :: "bexp"\<close>
+
+section \<open>5.3 Stack Machine and Compilation\<close>
+
+datatype instr = LOADI val | LOAD vname | ADD
+type_synonym stack = "val list"
+
+text \<open>
+  An execution is essentially a instruction of the current state
+  that change stack to another stack.\<close>
+fun exec1 :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack" where
+  "exec1 (LOADI n) s stk = n # stk"
+| "exec1 (LOAD x) s stk = s x # stk"
+| "exec1 ADD s (j # i # stk) = (i + j) # stk"
+  \<comment> \<open>book / ASM.thy: ADD only for length \<ge> 2.
+      Missing [] and [x]: fun warns; HOL leaves them unspecified.
+      Ex. 3.10: underflow is not an error — HOL has no exceptions.
+      Compiler proofs never hit those cases.\<close>
+(* | "exec1 ADD s stk = undefined" *)
+  \<comment> \<open>same meaning, no warning: what fun would insert anyway\<close>
+(* | "exec1 ADD s stk = stk" *)
+  \<comment> \<open>stronger machine: underflow leaves the stack unchanged\<close>
+
+text \<open>
+  A list of instructions is executed one by one: (recursive on list)\<close>
+fun exec :: "instr list \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack" where
+  "exec [] _ stk = stk"
+| "exec (i # is) s stk = exec is s (exec1 i s stk)"
+  \<comment> \<open>execute the first instruction from the list\<close>
+
+text \<open>!!!ABSENCE of JUMP instructions!!!\<close>
+
+text \<open>
+  Compilation is a interpretation of a aexp to the instruction list:\<close>
+fun comp :: "aexp \<Rightarrow> instr list" where
+  "comp (N m) = (LOADI m) # Nil"
+| "comp (V x) = (LOAD x) # Nil"
+| "comp (Plus e1 e2) = (comp e1) @ (comp e2) @ (ADD # Nil)"
+  \<comment> \<open>postfix: code for e1, then e2, then ADD.
+      exec (comp e1) leaves aval e1 # stk;
+      exec (comp e2) then leaves aval e2 # aval e1 # stk.
+      ADD matches j # i # stk, so i is e1 and j is e2, and pushes i + j.
+      That is aval e1 + aval e2, i.e. aval (Plus e1 e2).\<close>
+
 end
