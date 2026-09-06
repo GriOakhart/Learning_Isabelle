@@ -663,4 +663,64 @@ lemma "exec_op (comp e) s stk = Some ((aval e s) # stk)"
     apply (simp_all add: exec_op_append)
   done
 
+(* Second variant: thread @{typ "stack option"} as the machine state. *)
+fun exec_op2 :: "instr list \<Rightarrow> state \<Rightarrow> stack option \<Rightarrow> stack option" where
+  "exec_op2 [] _ stk = (if stk = None then None else stk)"
+  \<comment> \<open>same as @{term stk}: @{const None} stays @{const None}\<close>
+| "exec_op2 (i # is) s stk = (
+    case stk of
+      None \<Rightarrow> None
+    | Some stk' \<Rightarrow> (
+        case (exec1_op i s stk') of
+          None \<Rightarrow> None
+        | Some stk'' \<Rightarrow> exec_op2 is s (Some stk'')))"
+
+(* Extra lemma needed: *)
+lemma exec_op2_None [simp]: "exec_op2 is s None = None"
+  \<comment> \<open>Once the state is @{const None}, every leftover list stays @{const None}.
+      @{text auto} will not induct on a free @{term is2}, so the Cons /
+      @{const None} case of @{text exec_op_append2} is
+      @{prop "None = exec_op2 is2 s None"} without this lemma.\<close>
+  apply (induction "is")
+   apply (simp_all)
+  done
+
+lemma exec_op_append2: "exec_op2 (is1 @ is2) s stk = exec_op2 is2 s (exec_op2 is1 s stk)"
+  \<comment> \<open>Same hook as @{text exec_append} / @{text exec_op_append}:
+      induct on @{term is1}, generalize @{term stk}.
+      @{text "exec_op2.induct"} is the wrong hook: the goal is an
+      equality, not a single @{const exec_op2} (cf. @{text dist_dnf}).\<close>
+  apply (induction is1 arbitrary: stk)
+   apply (simp_all split: option.splits)
+  done
+
+lemma "exec_op2 (comp e) s (Some stk) = Some ((aval e s) # stk)"
+  apply (induction e arbitrary: stk)
+    apply (simp_all add: exec_op_append2)
+  done
+
+text \<open>
+  Exercise 5.10 models stack underflow as @{const None} (the book leaves
+  it unspecified). Both variants keep @{const exec1_op}; they differ in
+  how @{const None} is threaded.
+
+  Variant 1: the input is still a real @{typ stack}; only the result is
+  @{typ "stack option"}. After @{text "induction is1 arbitrary: stk"},
+  the @{const Cons} equation has a @{text case} on
+  @{term "exec1_op i s stk"}. Split that with @{text "option.split"}
+  (not @{text "exec_op.cases"}). Then @{text exec_op_append} is a
+  @{text case} on the prefix result, and the compiler theorem is the
+  same @{text "induction e arbitrary: stk"} as in \<section>5.3.
+
+  Variant 2: the machine state is @{typ "stack option"} throughout, so
+  @{text exec_op_append2} is ordinary composition. The extra lemma
+  @{text exec_op2_None} is required: on @{const Cons} with
+  @{const None}, the leftover goal is
+  @{prop "None = exec_op2 is2 s None"}, and @{text auto} will not
+  induct on a free @{term is2}. @{text "exec_op2.induct"} is the wrong
+  hook (equality of two calls; cf.\ @{text dist_dnf}).
+
+  @{const comp} never underflows, so both compiler theorems conclude
+  @{const Some}.\<close>
+
 end
