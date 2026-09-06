@@ -286,4 +286,26 @@ fun comp :: "aexp \<Rightarrow> instr list" where
       ADD matches j # i # stk, so i is e1 and j is e2, and pushes i + j.
       That is aval e1 + aval e2, i.e. aval (Plus e1 e2).\<close>
 
+(* Correctness for compilation: *)
+(* lemma "exec (comp e) s stk = exec1 (LOADI (aval e s)) s stk" *)
+lemma "exec (comp e) s stk = (aval e s) # stk"
+  \<comment> \<open>executing a compiled expression is the same as
+      putting the value of the expression on the stack\<close>
+  apply (induction e)
+    apply (simp_all)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>e1 e2.
+                 exec (Chapter_5.comp e1) s stk = aval e1 s # stk \<Longrightarrow>
+                 exec (Chapter_5.comp e2) s stk = aval e2 s # stk \<Longrightarrow>
+                 exec (Chapter_5.comp e1 @ Chapter_5.comp e2 @ [ADD]) s stk = (aval e1 s + aval e2 s) # stk
+          Desired chain (e1, then e2, then ADD):
+            exec (comp e1) s stk = aval e1 s # stk
+            exec (comp e2) s (aval e1 s # stk) = aval e2 s # aval e1 s # stk
+            exec1 ADD s (...) = (aval e1 s + aval e2 s) # stk
+          Two gaps:
+            1. split the @{text "@"}: need
+               @{prop "exec (is1 @ is2) s stk = exec is2 s (exec is1 s stk)"}
+            2. the e2 IH is for this @{term stk}, not @{term "aval e1 s # stk"}
+               — generalize: @{text "induction e arbitrary: stk"}\<close>
+
 end
