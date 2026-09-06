@@ -633,4 +633,19 @@ lemma "is_nnf e \<Longrightarrow> is_dnf (dnf_of_nnf e)"
                      is_nnf e1 \<and> is_nnf e2 \<Longrightarrow> is_dnf (distribute_AND (dnf_of_nnf e1) (dnf_of_nnf e2))\<close>
   done
 
+section \<open>Exercise 5.10\<close>
+
+fun exec1_op :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
+  "exec1_op (LOADI n) s stk = Some (n # stk)"
+| "exec1_op (LOAD x) s stk = Some (s x # stk)"
+| "exec1_op ADD s (j # i # stk) = Some ((i + j) # stk)"
+| "exec1_op ADD s stk = None"
+
+fun exec_op :: "instr list \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
+  "exec_op [] _ stk = Some stk"
+| "exec_op (i # is) s stk = (
+    case (exec1_op i s stk) of
+      None \<Rightarrow> None
+    | Some stk' \<Rightarrow> exec_op is s stk')"
+
 end
