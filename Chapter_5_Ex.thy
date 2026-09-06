@@ -635,6 +635,7 @@ lemma "is_nnf e \<Longrightarrow> is_dnf (dnf_of_nnf e)"
 
 section \<open>Exercise 5.10\<close>
 
+(* First variant: *)
 fun exec1_op :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
   "exec1_op (LOADI n) s stk = Some (n # stk)"
 | "exec1_op (LOAD x) s stk = Some (s x # stk)"
@@ -644,8 +645,22 @@ fun exec1_op :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> sta
 fun exec_op :: "instr list \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
   "exec_op [] _ stk = Some stk"
 | "exec_op (i # is) s stk = (
-    case (exec1_op i s stk) of
+    case (exec1_op i s stk) of  \<comment> \<open>may be None\<close>
       None \<Rightarrow> None
     | Some stk' \<Rightarrow> exec_op is s stk')"
+
+lemma exec_op_append: "exec_op (is1 @ is2) s stk = (
+        case (exec_op is1 s stk) of
+          None \<Rightarrow> None
+        | Some stk' \<Rightarrow> exec_op is2 s stk')"
+  apply (induction is1 arbitrary: stk)
+   (* apply (auto split: exec_op.cases) *)
+   apply (simp_all split: option.splits)
+  done
+
+lemma "exec_op (comp e) s stk = Some ((aval e s) # stk)"
+  apply (induction e arbitrary: stk)
+    apply (simp_all add: exec_op_append)
+  done
 
 end
