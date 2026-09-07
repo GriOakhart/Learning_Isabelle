@@ -760,6 +760,10 @@ lemma comp_preserve: "r < q \<Longrightarrow> exec (comp e q) s rs r = rs r"
   apply (induction e arbitrary: rs q)
     apply (simp_all add: exec_append)
   done
+text \<open>
+  The above is just what from the book:
+  The registers > r should be used in a stack-like fashion for intermediate results,
+  the ones < r should be left alone.\<close>
 
 (* Correctness of the compiler: *)
 lemma "exec (comp exp r) s rs r = aval exp s"
@@ -777,4 +781,28 @@ lemma "exec (comp exp r) s rs r = aval exp s"
     apply (simp add: comp_preserve)
   done
 
+section \<open>Exercise 5.12\<close>
+
+datatype instr0 = LDI0 val | LD0 vname | MV0 reg | ADD0 reg
+  \<comment> \<open>MV0 use register 0 as the source,
+      all others use register 0 as the target\<close>
+fun exec1_0 :: "instr0 \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
+  "exec1_0 (LDI0 m) s rs = rs(0 := m)"
+| "exec1_0 (LD0 x) s rs = rs(0 := s x)"
+| "exec1_0 (MV0 r) s rs = rs(r := rs 0)"
+| "exec1_0 (ADD0 r) s rs = rs(0 := (rs r) + (rs 0))"
+
+fun exec_0 :: "instr0 list \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
+  "exec_0 [] s rs = rs"
+| "exec_0 (i # is) s rs = exec_0 is s (exec1_0 i s rs)"
+
+fun comp_0 :: "aexp \<Rightarrow> reg \<Rightarrow> instr0 list" where
+  "comp_0 (aexp.N m) r = [LDI0 m] @ [MV0 r]"
+| "comp_0 (aexp.V x) r = [LD0 x] @ [MV0 r]"
+| "comp_0 (aexp.Plus e1 e2) r = (comp_0 e1 r) @ (comp_0 e2 (Suc r)) @ [ADD0 r] @ [ADD0 (Suc r)]"
+    \<comment> \<open>But register 0 can be polluted? Don't we need to clear it first?\<close>
+
+(* Correctness of the compiler: *)
+lemma "exec (comp exp r) s rs 0 = aval exp s"
+  \<comment> \<open>incorrect: counterexample found\<close>
 end
