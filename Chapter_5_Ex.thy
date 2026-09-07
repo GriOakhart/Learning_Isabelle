@@ -739,4 +739,42 @@ fun exec1 :: "instr \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<
 fun exec :: "instr list \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
   "exec [] s rs = rs"
 | "exec (i # is) s rs = exec is s (exec1 i s rs)"
+
+fun comp :: "aexp \<Rightarrow> reg \<Rightarrow> instr list" where
+  "comp (aexp.N m) r = [LDI m r]"
+| "comp (aexp.V x) r = [LD x r]"
+| "comp (aexp.Plus e1 e2) r = (comp e1 r) @ (comp e2 (Suc r)) @ [ADD r (Suc r)]"
+  \<comment> \<open>save the result for both subexpressions in consective registers\<close>
+
+lemma exec_append: "exec (is1 @ is2) s rs = exec is2 s (exec is1 s rs)"
+  apply (induction is1 arbitrary: rs)
+   apply (simp_all)
+  done
+
+lemma comp_preserve: "r < q \<Longrightarrow> exec (comp e q) s rs r = rs r"
+  \<comment> \<open>Code targeting @{term q} uses only registers @{text "\<ge> q"}
+      (result in @{term q}, scratch @{text "> q"}).  Registers
+      @{text "< q"} are left unchanged.  Needed for @{const Plus}:
+      after @{term "comp e1 r"}, @{term "comp e2 (Suc r)"} must not
+      overwrite @{term r}.\<close>
+  apply (induction e arbitrary: rs q)
+    apply (simp_all add: exec_append)
+  done
+
+(* Correctness of the compiler: *)
+lemma "exec (comp exp r) s rs r = aval exp s"
+  apply (induction exp arbitrary: rs r)
+    apply (simp_all add: exec_append)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>exp1 exp2 rs r.
+                 (\<And>rs r. exec (comp exp1 r) s rs r = aval exp1 s) \<Longrightarrow>
+                 (\<And>rs r. exec (comp exp2 r) s rs r = aval exp2 s) \<Longrightarrow>
+                 exec (comp exp2 (Suc r)) s (exec (comp exp1 r) s rs) r
+                 = aval exp1 s
+          The IHs speak only about the target register.  This goal
+          is preservation: @{term "r < Suc r"}, so @{thm comp_preserve}
+          and then IH @{term exp1}.\<close>
+    apply (simp add: comp_preserve)
+  done
+
 end
