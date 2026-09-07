@@ -42,4 +42,6 @@ value "ceiling 5"
 value "floor (5::real)"
 value "ceiling (5::real)"
 
+term "(\<lambda>x::nat. y::int)(3:=7)"
+value "((\<lambda>x::nat. y::int)(3:=7)) 3"
 end

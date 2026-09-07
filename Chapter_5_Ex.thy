@@ -723,4 +723,20 @@ text \<open>
   @{const comp} never underflows, so both compiler theorems conclude
   @{const Some}.\<close>
 
+section \<open>Exercise 5.11\<close>
+
+text \<open>
+  a register machine and compiler for aexp.\<close>
+type_synonym reg = nat  \<comment> \<open>the number of the register\<close>
+datatype instr = LDI int reg | LD vname reg | ADD reg reg
+  \<comment> \<open>ADD r_1 r_2 adds register r_2 to register r_1\<close>
+
+fun exec1 :: "instr \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
+  "exec1 (LDI m r) s rs = rs(r := m)"
+| "exec1 (LD x r) s rs = rs(r := s x)"
+| "exec1 (ADD r1 r2) s rs = rs(r1 := (rs r1) + (rs r2))"
+
+fun exec :: "instr list \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
+  "exec [] s rs = rs"
+| "exec (i # is) s rs = exec is s (exec1 i s rs)"
 end
