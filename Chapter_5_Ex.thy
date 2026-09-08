@@ -784,8 +784,9 @@ lemma "exec (comp exp r) s rs r = aval exp s"
 section \<open>Exercise 5.12\<close>
 
 datatype instr0 = LDI0 val | LD0 vname | MV0 reg | ADD0 reg
-  \<comment> \<open>MV0 use register 0 as the source,
-      all others use register 0 as the target\<close>
+  \<comment> \<open>Register 0 is the accumulator.
+      @{const MV0}: copy 0 into @{term r}.
+      The others write 0 (@{const ADD0} also reads @{term r}).\<close>
 fun exec1_0 :: "instr0 \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
   "exec1_0 (LDI0 m) s rs = rs(0 := m)"
 | "exec1_0 (LD0 x) s rs = rs(0 := s x)"
@@ -797,12 +798,31 @@ fun exec_0 :: "instr0 list \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> 
 | "exec_0 (i # is) s rs = exec_0 is s (exec1_0 i s rs)"
 
 fun comp_0 :: "aexp \<Rightarrow> reg \<Rightarrow> instr0 list" where
-  "comp_0 (aexp.N m) r = [LDI0 m] @ [MV0 r]"
-| "comp_0 (aexp.V x) r = [LD0 x] @ [MV0 r]"
-| "comp_0 (aexp.Plus e1 e2) r = (comp_0 e1 r) @ (comp_0 e2 (Suc r)) @ [ADD0 r] @ [ADD0 (Suc r)]"
-    \<comment> \<open>But register 0 can be polluted? Don't we need to clear it first?\<close>
+  "comp_0 (aexp.N m) r = [LDI0 m]"
+| "comp_0 (aexp.V x) r = [LD0 x]"
+  \<comment> \<open>Result is already in 0.  @{term r} is unused: it is a scratch boundary,
+      not a destination (unlike @{const comp} in 5.11).\<close>
+(* | "comp_0 (aexp.Plus e1 e2) r = (comp_0 e1 r) @ [MV0 r] @ (comp_0 e2 r) @ [ADD0 r]" *)
+  \<comment> \<open>Wrong: park in @{term r}.  If @{term "r = 0"}, @{const MV0} is a no-op,
+      then @{term e2} overwrites 0.\<close>
+(* | "comp_0 (aexp.Plus e1 e2) r = (comp_0 e1 r) @ [MV0 (Suc r)] @ (comp_0 e2 r) @ [ADD0 (Suc r)]" *)
+  \<comment> \<open>Wrong: park in @{term "Suc r"}, but @{term e2} still has boundary @{term r},
+      so it may write @{term "Suc r"} (a nested @{const Plus} parks its own left child there).
+      @{const N}/@{const V} would not.\<close>
+| "comp_0 (aexp.Plus e1 e2) r = (comp_0 e1 r) @ [MV0 (Suc r)] @ (comp_0 e2 (Suc r)) @ [ADD0 (Suc r)]"
+  \<comment> \<open>@{term r} is the scratch boundary: may overwrite 0 and registers @{text "> r"};
+      must leave @{text "1..r"} alone.
+      1. @{term e1} under this boundary; value in 0.
+      2. Park it in @{term "Suc r"} (always @{text "> r"}, never 0).
+      3. @{term e2} with the stricter boundary @{term "Suc r"}, so it
+         cannot overwrite the parked cell; its value is in 0.
+      4. @{const ADD0} from that cell into 0.
+      The result of every call stays in 0; @{const MV0} only parks a
+      left operand, it does not store @{term e2}.\<close>
 
 (* Correctness of the compiler: *)
-lemma "exec (comp exp r) s rs 0 = aval exp s"
-  \<comment> \<open>incorrect: counterexample found\<close>
+lemma "exec_0 (comp_0 exp r) s rs 0 = aval exp s"
+  \<comment> \<open>Result is in register 0, for any boundary @{term r}.
+      Same extra facts as 5.11: @{text exec} over @{text "@"}, and
+      that the forbidden zone is not overwritten.\<close>
 end
