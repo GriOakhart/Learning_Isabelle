@@ -4,9 +4,21 @@ A personal [Isabelle/HOL](https://isabelle.in.tum.de/) workspace for working thr
 [Concrete Semantics](http://concrete-semantics.org/) / Isabelle tutorial material on
 programming and proving.
 
-**Current coverage:** Chapters 2–4 complete (tutorial notes through section 4.4.7;
-exercises 2.1–2.11, 3.1–3.5, and 4.1–4.7). Chapter 5 notes cover arithmetic
-expressions (section 5.1) and boolean syntax/`bval`; exercises 5.1–5.6 are done.
+**Current coverage:** Chapters 2–5 complete (tutorial notes through section 5.3;
+exercises 2.1–2.11, 3.1–3.5, 4.1–4.7, and 5.1–5.12).
+
+Chapters are numbered in the order they were studied, not the book's order.
+Local Chapter 5 is Concrete Semantics Chapter 3 (IMP expressions).
+
+| This repo | Concrete Semantics |
+|-----------|-------------------|
+| Chapter 2 | Ch. 2 Programming and Proving |
+| Chapter 3 | Ch. 4 Logic and Proof Beyond Equality |
+| Chapter 4 | Ch. 5 Isar: A Language for Structured Proofs |
+| Chapter 5 | Ch. 3 Case Study: IMP Expressions |
+
+Exercise numbers in the theory files follow this repository (so book exercises
+3.1–3.12 appear here as 5.1–5.12).
 
 The project is organized so tutorial notes and chapter exercises live in separate
 theories, with a small playground for short-lived experiments and companion
@@ -43,8 +55,8 @@ isabelle build -D .
 | `Chapter_4.thy` | Tutorial notes for Chapter 4 (Isar) |
 | `Chapter_4_Ex.thy` | Chapter 4 exercises 4.1–4.6 |
 | `Chapter_4_Ex_7.thy` | Exercise 4.7 (balanced parentheses / grammar `S`) |
-| `Chapter_5.thy` | Tutorial notes for Chapter 5 (IMP arithmetic / boolean expressions) |
-| `Chapter_5_Ex.thy` | Chapter 5 exercises 5.1–5.6 (imports `Chapter_5`) |
+| `Chapter_5.thy` | Tutorial notes for Chapter 5 (book Ch. 3: IMP expressions / stack machine) |
+| `Chapter_5_Ex.thy` | Chapter 5 exercises 5.1–5.12 (imports `Chapter_5`) |
 | `Rule_Induction_Notes.thy` | What rule induction is: last lemma of 4.4.7, least fixed points, computation induction |
 | `Star_Simp_Notes.thy` | Why `simp` proves one `star`/`star'` direction and not the other |
 | `Tests.thy` | Scratch playground (`Complex_Main` for `int` / `real`) |
@@ -63,8 +75,8 @@ Tests → Chapter_2 → Chapter_2_Ex → Chapter_3 → Chapter_3_Ex → Chapter_
 - `Chapter_3_Ex` → `Chapter_2` (`'a tree`, `app`) and `Chapter_3` (`star`, `star_trans`)
 - `Chapter_4` and `Chapter_4_Ex` are independent of earlier chapters (import `Main` only; redefine `ev` / `evn` / `star` / `iter` locally)
 - `Chapter_4_Ex_7` is independent of earlier chapters (imports `Main` only; redefines `alpha` / `S` from Exercise 3.5 locally)
-- `Chapter_5` is independent of earlier chapters (imports `Main` only; defines `aexp` / `aval` / `asimp` / `bexp` / `bval`)
-- `Chapter_5_Ex` → `Chapter_5` (`aexp`, `aval`, `asimp_const`, `plus`, `aval_plus`)
+- `Chapter_5` is independent of earlier chapters (imports `Main` only; defines `aexp` / `aval` / `asimp` / `bexp` / `bval` / `instr` / `exec` / `comp`)
+- `Chapter_5_Ex` → `Chapter_5` (`aexp`, `aval`, `asimp_const`, `plus`, `aval_plus`, `asimp`, `bexp`, `bval`, `subst`, `instr`, `comp`)
 - `Star_Simp_Notes` → `Chapter_3_Ex` (`star'`, `star'_trans`)
 - `Rule_Induction_Notes` → `Chapter_4` (`ev`, `evn`, `ev.induct`)
 
@@ -218,9 +230,10 @@ succeed.
 
 ## Progress — Chapter 5
 
-IMP-style expressions: syntax, evaluation, and local optimizations. Notes and
-exercises are independent of Chapters 2–4 (they import `Main` only, then each
-other).
+IMP-style expressions (Concrete Semantics Chapter 3): syntax, evaluation,
+local optimizations, and a stack-machine compiler. Notes and exercises are
+independent of Chapters 2–4 (they import `Main` only, then each other).
+Exercise numbers here are 5.x; they are 3.1–3.12 in the book.
 
 ### `Chapter_5.thy` (tutorial notes)
 
@@ -230,13 +243,18 @@ other).
 | **5.1.2** Semantics | `val`, `state`; `aval`; function update `f(a := b)`; sample states `s0` / `s1` |
 | **5.1.3** Constant folding | Naive `asimp_const'` misses nested folds; `asimp_const` cases on simplified children; correctness via `auto split: aexp.split` |
 | | Smart constructor `plus` (fold `N+N`, drop `N 0`); `aval_plus` by `plus.induct`; recursive `asimp` |
-| **Boolean expressions** | Datatype `bexp` (`Bc` / `Not` / `And` / `Less`); `bval` (no boolean variables) |
+| **5.2** Boolean expressions | Datatype `bexp` (`Bc` / `Not` / `And` / `Less`); `bval` (no boolean variables) |
+| **5.2.1** Constant folding | Smart constructors `not` / `and` / `less`; recursive `bsimp` (uses `asimp` on `Less` children). Quote `and` — it is a keyword. Patterns beat `if` on `bool` (unconditional simp rules) |
+| **5.3** Stack machine | `instr` (`LOADI` / `LOAD` / `ADD`); `stack`; `exec1` / `exec`. `ADD` underflow is unspecified (no exceptions in HOL); compiler proofs never hit those cases. No jumps |
+| | Postfix `comp`; `exec_append`; compiler correctness `exec (comp e) s stk = aval e s # stk` needs `arbitrary: stk` |
 
 Recurring proof habits recorded in this theory:
 
 - `split: aexp.split` turns a `case` on `aexp` into a constructor conjunction for `auto`.
-- Local optimizations belong in a smart constructor (`plus`); the recursive pass (`asimp`) only traverses.
+- Local optimizations belong in a smart constructor (`plus`, `not`, `and`, `less`); the recursive pass (`asimp` / `bsimp`) only traverses.
 - `definition` equations are not simp rules; `fun` equations are.
+- When the recursive call uses a different stack (or register file), generalize that argument (`arbitrary: stk`).
+- `exec_append` splits compiled `@` sequences so each child's IH can fire.
 
 ### `Chapter_5_Ex.thy` (Chapter 5 exercises)
 
@@ -248,6 +266,12 @@ Recurring proof habits recorded in this theory:
 | **5.4** | `aexp2` with `Multiply`; smart constructors `plus2` / `multiply2` (fold `0`/`1` and `N*N`); `asimp2`. A `full_asimp`-style gatherer would need a polynomial normal form, not another homework function |
 | **5.5** | Post-increment `aexp3` / `aval3` returns `val × state`, threaded left-to-right (`x++ + x++` is 11, not 10). Do not bind the result state as `s1` (clashes with the constant in `Chapter_5`). `aexp4` / `aval4` adds `Divide` and partiality (`option`); parenthesize nested `case`, thread `t1` into `e2`, test zero with `if` |
 | **5.6** | `lexp` / `LET` is local scope, not a leftover state change. `lval` uses `s(x := lval e1 s)` — a constant `λx. …` shadows the name and drops the rest of `s`. `inline` compiles `LET` via `subst`; correctness needs `arbitrary: s` and the substitution lemma |
+| **5.7** | Smart constructors `Eq` / `Le` from the existing `bexp` constructors (no new constructors, no recursion on `aexp`). On `int`, `x = y` iff `¬(x < y) ∧ ¬(y < x)` and `x ≤ y` iff `¬(y < x)` |
+| **5.8** | `ifexp` with `If`; translations `b2ifexp` / `if2bexp`. `Not` / `And` become `If`; `If p q r` is `(p → q) ∧ (¬p → r)`. `Less` / `Less2` still take `aexp`s |
+| **5.9** | Pure boolean `pbexp` over `vname ⇒ bool`. NNF: `is_nnf`, `nnf` (De Morgan must recur as `nnf (NEG ei)`, not `NEG (nnf ei)`). DNF: `is_dnf`, `distribute_AND`, `dnf_of_nnf`. A 4-way `case` on the children's roots (`dnf_of_nnf_incorrect`) leaves nested `OR`s under `AND`. `dist_dnf` is computation induction on both arguments of `distribute_AND` |
+| **5.10** | Stack underflow as `None` (the book leaves it unspecified). Two machines share `exec1_op`: variant 1 takes a real `stack` and returns `stack option`; variant 2 threads `stack option` and needs `exec_op2_None`. `comp` never underflows, so both compiler theorems conclude `Some` |
+| **5.11** | Register machine: `LDI` / `LD` / `ADD`; `comp e r` writes the result to register `r` and uses `> r` as scratch. `comp_preserve` (`r < q`) says code targeting `q` leaves registers `< q` alone — needed so `comp e2 (Suc r)` does not overwrite `e1` |
+| **5.12** | Accumulator machine (`instr0`): register 0 is the result of every call; `MV0` only parks a left operand. `r` is a scratch boundary, not a destination. Park in `Suc r` and compile `e2` at `Suc r`. `comp0_preserve` is `r ≠ 0 ∧ r ≤ q` (`q` itself is preserved; `r < q` would make the parked-cell goal `Suc r < Suc r`) |
 
 ## `Tests.thy`
 
