@@ -831,12 +831,18 @@ lemma exec0_append: "exec_0 (is1 @ is2) s rs = exec_0 is2 s (exec_0 is1 s rs)"
    apply (simp_all)
   done
 
-lemma comp0_preserve: "r \<noteq> 0 \<and> r < q \<Longrightarrow> exec_0 (comp_0 exp q) s rs r = rs r"
+(* lemma comp0_preserve: "r \<noteq> 0 \<and> r < q \<Longrightarrow> exec_0 (comp_0 exp q) s rs r = rs r" *)
   \<comment> \<open>Boundary @{term q}: may overwrite 0 and registers @{text "> q"}.
       Same shape as @{text comp_preserve} in 5.11 (@{prop "r < q"}),
       plus @{prop "r \<noteq> 0"}: 0 is the accumulator and is never
       preserved.  @{prop "0 < r"} in the subgoal is @{prop "r \<noteq> 0"}
       on @{typ nat}.\<close>
+lemma comp0_preserve: "r \<noteq> 0 \<and> r \<le> q \<Longrightarrow> exec_0 (comp_0 exp q) s rs r = rs r"
+  \<comment> \<open>Weaker hypothesis than @{prop "r < q"} (the 5.11 shape):
+      @{term q} is only a boundary, not a destination, so register
+      @{term q} itself is preserved.  The compiler lemma parks in
+      @{term "Suc r"} and then runs @{term "comp_0 e2 (Suc r)"},
+      which is the case @{prop "r = q"}.\<close>
   apply (induction exp arbitrary: rs q)
     apply (simp_all add: exec0_append)
       \<comment> \<open>goal (1 subgoal):
@@ -863,4 +869,21 @@ lemma "exec_0 (comp_0 exp r) s rs 0 = aval exp s"
   \<comment> \<open>Result is in register 0, for any boundary @{term r}.
       Same extra facts as 5.11: @{text exec} over @{text "@"}, and
       that the forbidden zone is not overwritten.\<close>
+  apply (induction exp arbitrary: rs r)
+    apply (simp_all add: exec0_append comp0_preserve)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>exp1 exp2 rs r.
+                 (\<And>rs r. exec_0 (comp_0 exp1 r) s rs 0 = aval exp1 s) \<Longrightarrow>
+                 (\<And>rs r. exec_0 (comp_0 exp2 r) s rs 0 = aval exp2 s) \<Longrightarrow>
+                 exec_0 (comp_0 exp2 (Suc r)) s ((exec_0 (comp_0 exp1 r) s rs)(Suc r := aval exp1 s))
+                  (Suc r) =
+                 aval exp1 s
+          The IHs speak only about register 0.  This goal is the
+          parked cell @{term "Suc r"} under boundary @{term "Suc r"}.
+          Instantiating @{text comp0_preserve} at
+          @{term "r = Suc r"} and @{term "q = Suc r"} needs
+          @{prop "Suc r \<noteq> 0 \<and> Suc r \<le> Suc r"}.
+          The old @{prop "r < q"} gives the false
+          @{prop "Suc r < Suc r"}.\<close>
+  done
 end
