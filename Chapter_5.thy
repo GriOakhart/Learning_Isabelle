@@ -301,7 +301,7 @@ lemma "exec (comp e) s stk = (aval e s) # stk"
   \<comment> \<open>executing a compiled expression is the same as
       putting the value of the expression on the stack\<close>
   apply (induction e arbitrary: stk)  \<comment> \<open>stk changes here, must be generalized\<close>
-    apply (simp_all add: exec_append)
+    apply (simp_all)
       \<comment> \<open>goal (1 subgoal):
            1. \<And>e1 e2.
                  exec (Chapter_5.comp e1) s stk = aval e1 s # stk \<Longrightarrow>
@@ -315,6 +315,5 @@ lemma "exec (comp e) s stk = (aval e s) # stk"
             1. split the @{text "@"}: need @{thm exec_append}
             2. the e2 IH is for this @{term stk}, not @{term "aval e1 s # stk"}
                — generalize: @{text "induction e arbitrary: stk"}\<close>
-  done
 
 end

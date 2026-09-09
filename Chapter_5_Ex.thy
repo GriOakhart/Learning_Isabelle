@@ -744,7 +744,13 @@ fun comp :: "aexp \<Rightarrow> reg \<Rightarrow> instr list" where
   "comp (aexp.N m) r = [LDI m r]"
 | "comp (aexp.V x) r = [LD x r]"
 | "comp (aexp.Plus e1 e2) r = (comp e1 r) @ (comp e2 (Suc r)) @ [ADD r (Suc r)]"
-  \<comment> \<open>save the result for both subexpressions in consective registers\<close>
+  \<comment> \<open>@{term r} is the destination: the result of @{term e} lives in
+      @{term r}.  Scratch is @{text "> r"}; registers @{text "< r"}
+      stay unchanged.
+      1. @{term e1} into @{term r}.
+      2. @{term e2} into @{term "Suc r"}, with the stricter boundary
+         so it cannot overwrite @{term r}.
+      3. @{const ADD} writes @{term "e1 + e2"} into @{term r}.\<close>
 
 lemma exec_append: "exec (is1 @ is2) s rs = exec is2 s (exec is1 s rs)"
   apply (induction is1 arbitrary: rs)
@@ -753,10 +759,10 @@ lemma exec_append: "exec (is1 @ is2) s rs = exec is2 s (exec is1 s rs)"
 
 lemma comp_preserve: "r < q \<Longrightarrow> exec (comp e q) s rs r = rs r"
   \<comment> \<open>Code targeting @{term q} uses only registers @{text "\<ge> q"}
-      (result in @{term q}, scratch @{text "> q"}).  Registers
-      @{text "< q"} are left unchanged.  Needed for @{const Plus}:
-      after @{term "comp e1 r"}, @{term "comp e2 (Suc r)"} must not
-      overwrite @{term r}.\<close>
+      (result in @{term q}, scratch @{text "> q"}).
+      Registers @{text "< q"} are left unchanged.
+      Needed for @{const Plus}:
+      after @{term "comp e1 r"}, @{term "comp e2 (Suc r)"} must not overwrite @{term r}.\<close>
   apply (induction e arbitrary: rs q)
     apply (simp_all add: exec_append)
   done
@@ -819,6 +825,38 @@ fun comp_0 :: "aexp \<Rightarrow> reg \<Rightarrow> instr0 list" where
       4. @{const ADD0} from that cell into 0.
       The result of every call stays in 0; @{const MV0} only parks a
       left operand, it does not store @{term e2}.\<close>
+
+lemma exec0_append: "exec_0 (is1 @ is2) s rs = exec_0 is2 s (exec_0 is1 s rs)"
+  apply (induction is1 arbitrary: rs)
+   apply (simp_all)
+  done
+
+lemma comp0_preserve: "r \<noteq> 0 \<and> r < q \<Longrightarrow> exec_0 (comp_0 exp q) s rs r = rs r"
+  \<comment> \<open>Boundary @{term q}: may overwrite 0 and registers @{text "> q"}.
+      Same shape as @{text comp_preserve} in 5.11 (@{prop "r < q"}),
+      plus @{prop "r \<noteq> 0"}: 0 is the accumulator and is never
+      preserved.  @{prop "0 < r"} in the subgoal is @{prop "r \<noteq> 0"}
+      on @{typ nat}.\<close>
+  apply (induction exp arbitrary: rs q)
+    apply (simp_all add: exec0_append)
+      \<comment> \<open>goal (1 subgoal):
+           1. \<And>exp1 exp2.
+                 exec_0 (comp_0 exp1 q) s rs r = rs r \<Longrightarrow>
+                 exec_0 (comp_0 exp2 q) s rs r = rs r \<Longrightarrow>
+                 0 < r \<and> r < q \<Longrightarrow>
+                 exec_0 (comp_0 exp2 (Suc q)) s
+                  ((exec_0 (comp_0 exp1 q) s rs)
+                    (Suc q := exec_0 (comp_0 exp1 q) s rs 0)) r =
+                 rs r
+          Unfolded @{const Plus}: @{term e1} at @{term q}, park in
+          @{term "Suc q"}, @{term e2} at @{term "Suc q"}, @{const ADD0}
+          writes only 0.
+          The IHs as printed are for this @{term q} / @{term rs}.  The
+          goal uses @{term "Suc q"} and the updated register file, so
+          generalize both: @{text "arbitrary: rs q"}.
+          @{prop "r < q"} also gives @{prop "r \<noteq> Suc q"}, so the
+          parking update does not touch @{term r}.\<close>
+  done
 
 (* Correctness of the compiler: *)
 lemma "exec_0 (comp_0 exp r) s rs 0 = aval exp s"
