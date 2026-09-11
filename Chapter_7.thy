@@ -132,5 +132,38 @@ values "{map t [''x'', ''y''] | t.
       forever (condition stays true, SKIP leaves the state, same loop again),
       so the search never returns and the derivation tree grows without bound.\<close>
 
+section \<open>7.2.3 Rule Inversion\<close>
+
+text \<open>
+  Bare @{method cases} does not consume the @{text "\<Longrightarrow>"}-premise, so
+  @{text "by cases"} fails here --- same pitfall as Exercise 4.3.
+  Feed the inductive fact in.  Even then, @{text "by cases"} only
+  finishes when every branch is impossible (e.g.\ @{text "ev (Suc 0)"}).
+  SKIP leaves @{text "t = s"}, which @{method cases} does not @{method simp}
+  into @{text "s = t"}.\<close>
+
+(* apply-style, same shape as @{text ev.cases} in Chapter_4: *)
+lemma "(SKIP, s) \<Rightarrow> t \<Longrightarrow> s = t"
+  apply (rule big_step.cases)
+  apply auto
+  done
+
+lemma
+  assumes skip: "(SKIP, s) \<Rightarrow> t"
+  shows "s = t"
+proof -
+  from skip show "s = t"
+  proof cases
+    case Skip
+    thus ?thesis by simp
+  qed
+qed
+
+(* book's automation: specialize @{text big_step.cases} and register as elim *)
+inductive_cases SkipE[elim!]: "(SKIP, s) \<Rightarrow> t"
+thm SkipE
+
+lemma "(SKIP, s) \<Rightarrow> t \<Longrightarrow> s = t"
+  by blast
 
 end

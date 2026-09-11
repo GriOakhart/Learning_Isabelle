@@ -408,6 +408,12 @@ subsection \<open>4.4.5 Assumption Naming\<close>
 
 subsection \<open>4.4.6 Rule Inversion\<close>
 
+(* apply-style: *)
+lemma "ev m \<Longrightarrow> ev (m - 2)"
+  apply (rule ev.cases)
+    apply (auto)
+  done
+
 lemma ev_inver: "ev m \<Longrightarrow> ev (m - 2)"
 proof -
   assume "ev m"

@@ -260,7 +260,7 @@ fun exec1 :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack"
       Missing [] and [x]: fun warns; HOL leaves them unspecified.
       Ex. 3.10: underflow is not an error — HOL has no exceptions.
       Compiler proofs never hit those cases.\<close>
-(* | "exec1 ADD s stk = undefined" *)
+| "exec1 ADD s stk = undefined"
   \<comment> \<open>same meaning, no warning: what fun would insert anyway\<close>
 (* | "exec1 ADD s stk = stk" *)
   \<comment> \<open>stronger machine: underflow leaves the stack unchanged\<close>
@@ -301,7 +301,7 @@ lemma "exec (comp e) s stk = (aval e s) # stk"
   \<comment> \<open>executing a compiled expression is the same as
       putting the value of the expression on the stack\<close>
   apply (induction e arbitrary: stk)  \<comment> \<open>stk changes here, must be generalized\<close>
-    apply (simp_all)
+    (* apply (simp_all) *)
       \<comment> \<open>goal (1 subgoal):
            1. \<And>e1 e2.
                  exec (Chapter_5.comp e1) s stk = aval e1 s # stk \<Longrightarrow>
@@ -315,5 +315,7 @@ lemma "exec (comp e) s stk = (aval e s) # stk"
             1. split the @{text "@"}: need @{thm exec_append}
             2. the e2 IH is for this @{term stk}, not @{term "aval e1 s # stk"}
                — generalize: @{text "induction e arbitrary: stk"}\<close>
+    apply (simp_all add: exec_append)
+  done
 
 end
