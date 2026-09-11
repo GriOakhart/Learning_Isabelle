@@ -166,4 +166,17 @@ thm SkipE
 lemma "(SKIP, s) \<Rightarrow> t \<Longrightarrow> s = t"
   by blast
 
+lemma seq_inver: "(c1;; c2, stk1) \<Rightarrow> stk3 \<longleftrightarrow> (\<exists>stk2. ((c1, stk1) \<Rightarrow> stk2 \<and> (c2, stk2) \<Rightarrow> stk3))"
+  apply (rule iffI)
+   apply (rule big_step.cases)
+          apply (auto)
+  apply (simp add: big_step.Seq)
+  done
+
+lemma "((c1;; c2);; c3, s) \<Rightarrow> t \<longleftrightarrow> (c1;; (c2;; c3), s) \<Rightarrow> t"
+  apply (rule iffI)
+   apply (simp_all add: seq_inver)
+   apply (auto)
+  done
+
 end
