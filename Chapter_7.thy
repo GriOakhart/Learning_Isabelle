@@ -101,4 +101,36 @@ schematic_goal ex: "(''x'' ::= N 5;; ''y'' ::= V ''x'', s) \<Rightarrow> ?t"
 thm ex[simplified]
     \<comment> \<open>(''x'' ::= N 5;; ''y'' ::= V ''x'', ?s) \<Rightarrow> ?s(''x'' := 5, ''y'' := 5)\<close>
 
+text \<open>
+  generate code for the predicate big_step (i.e. \<Rightarrow>):\<close>
+code_pred big_step .
+
+text \<open>
+  similar to value, but works on inductive definitions and computes a set of possible results:\<close>
+(* values "(SKIP, (\<lambda>_. 0))" *)
+values "{t. (SKIP, (\<lambda>_. 0)) \<Rightarrow> t}"
+  \<comment> \<open>"{_}" :: "(char list \<Rightarrow> int) set",
+      - a singleton set
+      (SKIP, (\<lambda>_. 0)) \<Rightarrow> t - this is a predicate\<close>
+
+(* see section 4.2: *)
+values "{t ''x'' | t. (SKIP, (\<lambda>_. 0)) \<Rightarrow> t}"
+  \<comment> \<open>"{0}" :: "int set"\<close>
+
+values "{map t [''x'', ''y''] | t. (''x'' ::= (Plus (V ''x'') (N 1));; ''y'' ::= V ''x'', (\<lambda>_. 1)) \<Rightarrow> t}"
+  \<comment> \<open>"{[2, 2]}" :: "int list set"\<close>
+
+values "{map t [''x'', ''y''] | t.
+  (WHILE Less (V ''x'') (V ''y'') DO (''x'' ::= Plus (V ''x'') (N 5)),
+   (\<lambda>_. 0)(''x'' := 0, ''y'' := 13)) \<Rightarrow> t}"
+  \<comment> \<open>"{[15, 13]}" :: "int list set"
+      x := 0,5,10,15 then 15 < 13 fails. A WHILE that actually ends.\<close>
+
+(* values "{t. (WHILE Bc True DO SKIP, (\<lambda>_. 0)) \<Rightarrow> t}" *)
+  \<comment> \<open>Do not run:
+      @{command values} searches for a derivation. @{text WhileTrue} matches
+      forever (condition stays true, SKIP leaves the state, same loop again),
+      so the search never returns and the derivation tree grows without bound.\<close>
+
+
 end
