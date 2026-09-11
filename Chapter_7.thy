@@ -54,27 +54,51 @@ section \<open>7.2 Big-Step Semantics\<close>
 section \<open>7.2.1 Definition\<close>
 
 text \<open>
-  @{const big_step} is a relation, not a function:
-  @{term "(c, s) \<Rightarrow> t"} means @{term c} started in @{term s} \emph{terminates} in @{term t}.
+  @{text big_step} is a relation, not a function:
+  @{text "(c, s) \<Rightarrow> t"} means @{text c} started in @{text s}
+  \emph{terminates} in @{text t}.
   A @{command fun} @{text "com \<times> state \<Rightarrow> state"} would have to be total (Ch.\ 2.3),
-  but @{term "WHILE Bc True DO SKIP"} never yields a @{term t}.
+  but @{term "WHILE Bc True DO SKIP"} never yields a final state.
   @{command fun} also requires recursive calls on strictly smaller arguments;
   @{text WhileTrue} recurses on the same loop.
   @{command inductive} has no termination obligation (Ch.\ 4.5):
   a derivation exists iff execution finishes.
   Contrast @{const aval} / @{const bval}, which always terminate on smaller syntax.
-  Determinism (at most one @{term t}) is then a theorem, not built in.\<close>
+  Determinism (at most one final state) is then a theorem, not built in.\<close>
+
 inductive big_step :: "com \<times> state \<Rightarrow> state \<Rightarrow> bool" (infix "\<Rightarrow>" 55) where
+    \<comment> \<open>`(infix "\<Rightarrow>" 55)` is mixfix for the constant, not a rename:
+        `(c, s) \<Rightarrow> t` is `big_step (c, s) t` everywhere (rules, lemmas, \<dots>).
+        First argument is a pair so the configuration sits left of \<Rightarrow>
+        (`com \<times> state \<Rightarrow> state \<Rightarrow> bool`, not `com \<Rightarrow> state \<Rightarrow> state \<Rightarrow> bool`).
+        `infix` expands to `("_ \<Rightarrow>/ _" [56, 56] 55)`: both holes demand 56,
+        so another \<Rightarrow> (priority 55) cannot sit there --- non-associative.
+        The type arrow `\<Rightarrow>` is a different token.\<close>
   Skip: "(SKIP, s) \<Rightarrow> s"
 | Assign: "(Assign x exp, s) \<Rightarrow> s (x := aval exp s)"
-| Seq: "\<lbrakk>(com1, s1) \<Rightarrow> s2; (com2, s2) \<Rightarrow> s3\<rbrakk> \<Longrightarrow> (com1;; com2, s1) \<Rightarrow> s3"
+| Seq: "\<lbrakk>(com1, stk1) \<Rightarrow> stk2; (com2, stk2) \<Rightarrow> stk3\<rbrakk> \<Longrightarrow> (com1;; com2, stk1) \<Rightarrow> stk3"
+  \<comment> \<open>s0 is already used in Chapter_5.thy\<close>
 | IfTrue: "\<lbrakk>bval b s; (com1, s) \<Rightarrow> t\<rbrakk> \<Longrightarrow> (IF b THEN com1 ELSE com2, s) \<Rightarrow> t"
 | IfFalse: "\<lbrakk>\<not> bval b s; (com2, s) \<Rightarrow> t\<rbrakk> \<Longrightarrow> (IF b THEN com1 ELSE com2, s) \<Rightarrow> t"
 | WhileFalse: "(\<not> bval b s) \<Longrightarrow> (WHILE b DO com, s) \<Rightarrow> s"
   \<comment> \<open>the loop body is just skipped\<close>
-| WhileTrue: "\<lbrakk>bval b s1; (com, s1) \<Rightarrow> s2; (WHILE b DO com, s2) \<Rightarrow> s3\<rbrakk> \<Longrightarrow> (WHILE b DO com, s1) \<Rightarrow> s3"
-  \<comment> \<open>one more iteration: if b holds at s1, prepend a body run
-      s1 \<Rightarrow> s2 to a remaining loop from s2. b is not retested here;
+| WhileTrue: "\<lbrakk>bval b stk1; (com, stk1) \<Rightarrow> stk2; (WHILE b DO com, stk2) \<Rightarrow> stk3\<rbrakk> \<Longrightarrow> (WHILE b DO com, stk1) \<Rightarrow> stk3"
+  \<comment> \<open>one more iteration: if b holds at stk1, prepend a body run
+      stk1 \<Rightarrow> stk2 to a remaining loop from stk2. b is not retested here;
       the recursive WHILE premise does that (False or True again).\<close>
+
+section \<open>7.2.2 Deriving IMP Executions\<close>
+
+schematic_goal ex: "(''x'' ::= N 5;; ''y'' ::= V ''x'', s) \<Rightarrow> ?t"
+  apply (rule Seq)
+   apply (rule Assign)
+  apply (simp)
+  apply (rule Assign)
+  done
+    \<comment> \<open>`done` instantiates ?t with the last Assign's RHS, which still
+        has @{term "aval (V ''x'')"} --- there is no remaining subgoal
+        to @{method simp}. Reduce the finished fact instead:\<close>
+thm ex[simplified]
+    \<comment> \<open>(''x'' ::= N 5;; ''y'' ::= V ''x'', ?s) \<Rightarrow> ?s(''x'' := 5, ''y'' := 5)\<close>
 
 end
