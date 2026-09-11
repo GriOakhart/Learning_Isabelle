@@ -36,9 +36,45 @@ datatype
         WHILE b DO c1;; c2 = (WHILE b DO c1);; c2;
         write WHILE b DO (c1;; c2) to sequence in the body.\<close>
 
+  \<comment> \<open>Example: WHILE b DO c1;; c2 means (WHILE b DO c1);; c2,
+      not WHILE b DO (c1;; c2). Compare own priority with the hole's
+      minimum: allowed iff own_prio \<ge> hole_threshold.
+      1. WHILE b DO (c1;; c2): Seq's own prio is 60; the DO-hole
+         demands 61; 60 < 61, so Seq is not tight enough --- rejected
+         without parentheses.
+      2. (WHILE b DO c1);; c2: While's own prio is 61; Seq's left hole
+         demands 60; 61 \<ge> 60, so While is tight enough --- this is the parse.\<close>
+
 term "Seq (Assign (''x'') (Plus (V ''y'') (N 1))) (Assign (''y'') (N 2))"
   \<comment> \<open>abstract syntax: constructors applied to arguments\<close>
 term "''x'' ::= Plus (V ''y'') (N 1);; ''y'' ::= N 2"
   \<comment> \<open>the same term, written with the mixfix sugars above\<close>
+
+section \<open>7.2 Big-Step Semantics\<close>
+section \<open>7.2.1 Definition\<close>
+
+text \<open>
+  @{const big_step} is a relation, not a function:
+  @{term "(c, s) \<Rightarrow> t"} means @{term c} started in @{term s} \emph{terminates} in @{term t}.
+  A @{command fun} @{text "com \<times> state \<Rightarrow> state"} would have to be total (Ch.\ 2.3),
+  but @{term "WHILE Bc True DO SKIP"} never yields a @{term t}.
+  @{command fun} also requires recursive calls on strictly smaller arguments;
+  @{text WhileTrue} recurses on the same loop.
+  @{command inductive} has no termination obligation (Ch.\ 4.5):
+  a derivation exists iff execution finishes.
+  Contrast @{const aval} / @{const bval}, which always terminate on smaller syntax.
+  Determinism (at most one @{term t}) is then a theorem, not built in.\<close>
+inductive big_step :: "com \<times> state \<Rightarrow> state \<Rightarrow> bool" (infix "\<Rightarrow>" 55) where
+  Skip: "(SKIP, s) \<Rightarrow> s"
+| Assign: "(Assign x exp, s) \<Rightarrow> s (x := aval exp s)"
+| Seq: "\<lbrakk>(com1, s1) \<Rightarrow> s2; (com2, s2) \<Rightarrow> s3\<rbrakk> \<Longrightarrow> (com1;; com2, s1) \<Rightarrow> s3"
+| IfTrue: "\<lbrakk>bval b s; (com1, s) \<Rightarrow> t\<rbrakk> \<Longrightarrow> (IF b THEN com1 ELSE com2, s) \<Rightarrow> t"
+| IfFalse: "\<lbrakk>\<not> bval b s; (com2, s) \<Rightarrow> t\<rbrakk> \<Longrightarrow> (IF b THEN com1 ELSE com2, s) \<Rightarrow> t"
+| WhileFalse: "(\<not> bval b s) \<Longrightarrow> (WHILE b DO com, s) \<Rightarrow> s"
+  \<comment> \<open>the loop body is just skipped\<close>
+| WhileTrue: "\<lbrakk>bval b s1; (com, s1) \<Rightarrow> s2; (WHILE b DO com, s2) \<Rightarrow> s3\<rbrakk> \<Longrightarrow> (WHILE b DO com, s1) \<Rightarrow> s3"
+  \<comment> \<open>one more iteration: if b holds at s1, prepend a body run
+      s1 \<Rightarrow> s2 to a remaining loop from s2. b is not retested here;
+      the recursive WHILE premise does that (False or True again).\<close>
 
 end
