@@ -179,4 +179,39 @@ lemma "((c1;; c2);; c3, s) \<Rightarrow> t \<longleftrightarrow> (c1;; (c2;; c3)
    apply (auto)
   done
 
+section \<open>7.2.4 Equivalence of Commands\<close>
+
+text \<open>
+  Equivalence w.r.t. the big-step semantics:\<close>
+abbreviation equiv_c :: "com \<Rightarrow> com \<Rightarrow> bool" (infix "\<sim>" 50) where
+  \<comment> \<open>"\<sim>" is \<sim>\<close>
+  "c \<sim> c' \<equiv> (\<forall>s t. (c, s) \<Rightarrow> t = (c', s) \<Rightarrow> t)"
+  \<comment> \<open>"Both change s to t" overstates: @{text "="} is iff of bools,
+      so the predicates must match, not both be True.
+      From any s, c reaches t exactly when c' does
+      (both may diverge (non-terminated), or leave s unchanged).\<close>
+
+lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
+  apply (auto)
+   apply (rule big_step.cases)
+          apply (auto)
+    apply (simp_all add: big_step.intros)
+  apply (rule big_step.cases)
+         apply (auto)
+   apply (simp_all add: big_step.intros)
+    \<comment> \<open>WhileTrue needs (c, sa) \<Rightarrow> ?s2 and (WHILE b DO c, ?s2) \<Rightarrow> ta
+        separately; invert the Seq fact first:\<close>
+  apply (simp add: seq_inver)
+  apply (auto intro: WhileTrue)
+  done
+
+lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
+    \<comment> \<open>same argument, shorter script: @{method erule} inverts the
+        assumption (unlike @{method rule}); @{text "+"} repeats for
+        both directions of @{text "\<sim>"}. @{text seq_inver} unpacks Seq
+        so @{text WhileTrue} can fire; @{text SkipE} closes ELSE SKIP.\<close>
+  apply auto
+  apply (erule big_step.cases, auto intro: big_step.intros simp: seq_inver)+
+  done
+
 end
