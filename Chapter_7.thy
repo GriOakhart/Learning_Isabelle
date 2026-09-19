@@ -134,6 +134,9 @@ values "{map t [''x'', ''y''] | t.
 
 section \<open>7.2.3 Rule Inversion\<close>
 
+(* the following is the inverted rules for big_step semantics: *)
+thm big_step.cases
+
 text \<open>
   Bare @{method cases} does not consume the @{text "\<Longrightarrow>"}-premise, so
   @{text "by cases"} fails here --- same pitfall as Exercise 4.3.
@@ -191,27 +194,56 @@ abbreviation equiv_c :: "com \<Rightarrow> com \<Rightarrow> bool" (infix "\<sim
       From any s, c reaches t exactly when c' does
       (both may diverge (non-terminated), or leave s unchanged).\<close>
 
+text \<open>
+  Unfolding WHILE-DO:\<close>
+(* Variant 1 *)
 lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
   apply (auto)
-   apply (rule big_step.cases)
+   apply (rule big_step.cases)  \<comment> \<open>rules inversion for the first subgoal\<close>
           apply (auto)
-    apply (simp_all add: big_step.intros)
+    \<comment> \<open>Auto discharges the major premise from the assumption and rules out
+        the five non-While cases by constructor distinctness, leaving WhileFalse and WhileTrue.\<close>
+    \<comment> \<open> 1. \<And>sa. (WHILE b DO c, sa) \<Rightarrow> sa \<Longrightarrow>
+            \<not> bval b sa \<Longrightarrow> (IF b THEN c;; WHILE b DO c ELSE SKIP, sa) \<Rightarrow> sa\<close>
+    apply (simp add: big_step.IfFalse big_step.Skip)
+    \<comment> \<open> 2. \<And>stk1 stk2 stk3.
+         (WHILE b DO c, stk1) \<Rightarrow> stk3 \<Longrightarrow>
+         bval b stk1 \<Longrightarrow>
+         (c, stk1) \<Rightarrow> stk2 \<Longrightarrow>
+         (WHILE b DO c, stk2) \<Rightarrow> stk3 \<Longrightarrow> (IF b THEN c;; WHILE b DO c ELSE SKIP, stk1) \<Rightarrow> stk3\<close>
+   apply (simp add: big_step.IfTrue big_step.Seq)
   apply (rule big_step.cases)
          apply (auto)
    apply (simp_all add: big_step.intros)
+    \<comment> \<open>apply inverted rules for Seq again:\<close>
+  apply (rule big_step.cases)
+         apply (auto)
+  apply (simp add: big_step.Seq big_step.WhileTrue)
+(*
+  or alternatively, we can do the following, instead of applying rules of inversion again:
     \<comment> \<open>WhileTrue needs (c, sa) \<Rightarrow> ?s2 and (WHILE b DO c, ?s2) \<Rightarrow> ta
         separately; invert the Seq fact first:\<close>
   apply (simp add: seq_inver)
-  apply (auto intro: WhileTrue)
+  apply (auto intro: WhileTrue) *)
   done
 
+(* Variant 2 - Simplified version for variant 1*)
 lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
     \<comment> \<open>same argument, shorter script: @{method erule} inverts the
         assumption (unlike @{method rule}); @{text "+"} repeats for
         both directions of @{text "\<sim>"}. @{text seq_inver} unpacks Seq
         so @{text WhileTrue} can fire; @{text SkipE} closes ELSE SKIP.\<close>
   apply auto
-  apply (erule big_step.cases, auto intro: big_step.intros simp: seq_inver)+
+  apply (rule big_step.cases, auto intro: big_step.intros simp: seq_inver)+
   done
+
+lemma "c \<sim> IF b THEN c ELSE c"
+  apply auto
+   apply (erule big_step.cases, auto intro: big_step.intros)+
+  done
+
+lemma "\<lbrakk>(WHILE b DO c, s) \<Rightarrow> t; c \<sim> c'\<rbrakk> \<Longrightarrow> (WHILE b DO c', s) \<Rightarrow> t"
+  apply (induction "WHILE b DO c" s t arbitrary: b c rule: big_step.induct)
+   apply blast
 
 end
