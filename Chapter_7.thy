@@ -196,7 +196,7 @@ abbreviation equiv_c :: "com \<Rightarrow> com \<Rightarrow> bool" (infix "\<sim
 
 text \<open>
   Unfolding WHILE-DO:\<close>
-(* Variant 1 *)
+(* Variant 1A *)
 lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
   apply (auto)
    apply (rule big_step.cases)  \<comment> \<open>rules inversion for the first subgoal\<close>
@@ -225,6 +225,23 @@ lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
         separately; invert the Seq fact first:\<close>
   apply (simp add: seq_inver)
   apply (auto intro: WhileTrue) *)
+  done
+
+text \<open>
+  Variant 1B:
+  Or we can firstly generate the inverted rules for specific schemes:\<close>
+inductive_cases SeqE: "(c1;; c2, s) \<Rightarrow> t"
+inductive_cases IfE: "(IF b THEN c1 ELSE c2, s) \<Rightarrow> t"
+inductive_cases WhileE: "(WHILE b DO c, s) \<Rightarrow> t"
+lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
+  apply (auto)
+   apply (erule WhileE)
+    apply (simp_all add: big_step.intros)
+  apply (erule IfE)
+   apply (erule SeqE)
+   apply (simp add: big_step.WhileTrue)
+  apply (erule SkipE)
+  apply (simp add: big_step.WhileFalse)
   done
 
 (* Variant 2 - Simplified version for variant 1*)
