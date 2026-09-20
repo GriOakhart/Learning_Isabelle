@@ -272,15 +272,30 @@ text \<open>
 lemma "\<lbrakk>(WHILE b DO c, s) \<Rightarrow> t; c \<sim> c'\<rbrakk> \<Longrightarrow> (WHILE b DO c', s) \<Rightarrow> t"
   (* apply (induction "WHILE b DO c" s t arbitrary: b c rule: big_step.inducts) *)
   \<comment> \<open>Ill-typed instantiation:
-        x__ :: com\<close>
-  apply (induction "(WHILE b DO c, s)" t arbitrary: b c rule: big_step.inducts)
-   apply (blast intro: big_step.intros)
-  oops
+        x__ :: com
+      @{text big_step.inducts} is @{text "P (c, s) t"}: first slot is
+      @{typ "com \<times> state"}, not @{typ com}. Three terms do not match.\<close>
+  apply (induction "(WHILE b DO c, s)" t arbitrary: b c s rule: big_step.inducts)
+    \<comment> \<open>`s` lives in the hook pair, so generalize it too. Otherwise the
+        remaining-loop IH is only @{text "stk2 = s \<Longrightarrow> \<dots>"} and WhileTrue sticks.\<close>
+   apply (auto intro: big_step.intros)
+  done
 
 (* the proof from the official theory file: *)
 declare big_step.intros [intro]
 lemmas big_step_induct = big_step.induct[split_format(complete)]
-thm big_step_induct
+  \<comment> \<open>`big_step` is @{typ "com \<times> state \<Rightarrow> state \<Rightarrow> bool"}, so
+      @{text big_step.induct} has two slots: @{text "P (c, s) t"}.
+      @{text "split_format(complete)"} unpacks the pair, giving
+      @{text big_step_induct} the three slots @{text "P c s t"}.
+      The induction below instantiates those three:
+      @{text "WHILE b DO c"}, @{text s}, @{text t}.
+      Without the split that is the ill-typed instantiation
+      above (`x__ :: com`): the first slot of
+      @{text big_step.inducts} wants @{typ "com \<times> state"}.
+      The 4.4.7 hook also needs the command as its own argument
+      so @{text "arbitrary: b c"} can generalize the pieces of
+      @{text "WHILE b DO c"}.\<close>
 lemma sim_while_cong_aux:
   "(WHILE b DO c,s) \<Rightarrow> t  \<Longrightarrow> c \<sim> c' \<Longrightarrow>  (WHILE b DO c',s) \<Rightarrow> t"
   apply(induction "WHILE b DO c" s t arbitrary: b c rule: big_step_induct)
