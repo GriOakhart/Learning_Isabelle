@@ -270,6 +270,24 @@ text \<open>
 text \<open>
   Recall section 4.4.7\<close>
 lemma "\<lbrakk>(WHILE b DO c, s) \<Rightarrow> t; c \<sim> c'\<rbrakk> \<Longrightarrow> (WHILE b DO c', s) \<Rightarrow> t"
-  apply (induction rule: big_step.inducts)
+  (* apply (induction "WHILE b DO c" s t arbitrary: b c rule: big_step.inducts) *)
+  \<comment> \<open>Ill-typed instantiation:
+        x__ :: com\<close>
+  apply (induction "(WHILE b DO c, s)" t arbitrary: b c rule: big_step.inducts)
+   apply (blast intro: big_step.intros)
+  oops
+
+(* the proof from the official theory file: *)
+declare big_step.intros [intro]
+lemmas big_step_induct = big_step.induct[split_format(complete)]
+thm big_step_induct
+lemma sim_while_cong_aux:
+  "(WHILE b DO c,s) \<Rightarrow> t  \<Longrightarrow> c \<sim> c' \<Longrightarrow>  (WHILE b DO c',s) \<Rightarrow> t"
+  apply(induction "WHILE b DO c" s t arbitrary: b c rule: big_step_induct)
+   apply (blast)
+    \<comment> \<open>Failed to apply proof method,
+        lacks of declare big_step.intros [intro]\<close>
+  apply (blast)
+  done
 
 end
