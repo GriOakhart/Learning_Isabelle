@@ -449,7 +449,7 @@ qed
       but \<open>\<not> ev (Suc 0)\<close> is true, so \<open>False\<close> can never be derived.\<close>
 
 (*Exercise:*)
-lemma "\<not> ev (Suc (Suc (Suc 0)))"
+lemma ev_SSS0: "\<not> ev (Suc (Suc (Suc 0)))"
 proof
   assume "ev (Suc (Suc (Suc 0)))"
   (* hence "ev (Suc 0)" by (simp add: ev_inver) - fails *)
@@ -500,17 +500,17 @@ proof (induction "Suc m" arbitrary: m rule: ev.induct)
 next
   case (evSS n)
   show ?case
-  proof
+  proof  \<comment> \<open>contradiction\<close>
     assume "ev (Suc n)"
     thus False
     proof cases  \<comment> \<open>rule inversion for ev (Suc n)\<close>
-      case ev0
+      case ev0  \<comment> \<open>case doesn't match\<close>
     next
       case (evSS k)  \<comment> \<open>n = Suc k and ev k\<close>
         \<comment> \<open>this:
               n = Suc k
               ev k\<close>
-      with evSS.hyps show False by auto
+      with evSS.hyps show False by auto  \<comment> \<open>this points to the outer evSS, see comment below\<close>
         \<comment> \<open>picking this:
               ev n
               n = Suc ?m \<Longrightarrow> \<not> ev ?m\<close>
@@ -518,11 +518,32 @@ next
   qed
 qed
 
+  \<comment> \<open>\<open>evSS\<close> and \<open>evSS.hyps\<close> are distinct, complete fact names;
+      the dot is not a member-access operator.
+      
+      The outer \<open>induction\<close> case creates the aggregate fact \<open>evSS\<close>
+      together with facts such as \<open>evSS.hyps\<close> and \<open>evSS.IH\<close>.
+      
+      The inner \<open>cases\<close> case rebinds only the aggregate fact \<open>evSS\<close>
+      (here, \<open>n = Suc k\<close> and \<open>ev k\<close>); it does not create a new \<open>evSS.hyps\<close>.
+      
+      Hence it shadows the exact name \<open>evSS\<close>, but \<open>evSS.hyps\<close> still
+      denotes the outer induction fact.
+      Inside the inner case, \<open>this\<close> denotes its aggregate facts.\<close>
+
 text \<open>
   What @{text P} is here, how @{text ev.induct} is obtained from the
   introduction rules, and the least-fixed-point / computation-induction
-  reading of rule induction: @{file \<open>Rule_Induction_Notes.thy\<close>}.
-\<close>
+  reading of rule induction: @{file \<open>Rule_Induction_Notes.thy\<close>}.\<close>
+
+(* the apply-style: *)
+inductive_cases evSSE: "ev (Suc (Suc m))"
+lemma "ev (Suc m) \<Longrightarrow> \<not> ev m"
+  apply (induction "Suc m" arbitrary: m rule: ev.inducts)
+  apply (rule ev.cases, auto simp: not_ev1 ev.intros)
+  apply (erule evSSE, simp)
+  done
+
 end
 
 
