@@ -248,10 +248,9 @@ lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
 lemma "WHILE b DO c \<sim> IF b THEN (c;;  WHILE b DO c) ELSE SKIP"
     \<comment> \<open>same argument, shorter script: @{method erule} inverts the
         assumption (unlike @{method rule}); @{text "+"} repeats for
-        both directions of @{text "\<sim>"}. @{text seq_inver} unpacks Seq
-        so @{text WhileTrue} can fire; @{text SkipE} closes ELSE SKIP.\<close>
+        both directions of @{text "\<sim>"}.\<close>
   apply auto
-  apply (rule big_step.cases, auto intro: big_step.intros simp: seq_inver)+
+  apply (erule big_step.cases, auto intro: big_step.intros)+
   done
 
 lemma "c \<sim> IF b THEN c ELSE c"
@@ -259,8 +258,18 @@ lemma "c \<sim> IF b THEN c ELSE c"
    apply (erule big_step.cases, auto intro: big_step.intros)+
   done
 
+thm big_step.inducts
+
+text \<open>
+  This lemma is more complex. Rule inversion alone only exposes the outermost
+  loop step. In the WhileTrue case, the recursive premise
+  @{text "(WHILE b DO c, s2) \<Rightarrow> t"} remains, but inversion provides no
+  hypothesis for replacing @{text c} by @{text c'} in that execution.
+  Induction on the big-step derivation is therefore needed to obtain the
+  required induction hypothesis for every remaining loop iteration.\<close>
+text \<open>
+  Recall section 4.4.7\<close>
 lemma "\<lbrakk>(WHILE b DO c, s) \<Rightarrow> t; c \<sim> c'\<rbrakk> \<Longrightarrow> (WHILE b DO c', s) \<Rightarrow> t"
-  apply (induction "WHILE b DO c" s t arbitrary: b c rule: big_step.induct)
-   apply blast
+  apply (induction rule: big_step.inducts)
 
 end

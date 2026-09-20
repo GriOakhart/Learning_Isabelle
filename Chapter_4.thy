@@ -469,19 +469,51 @@ qed
 subsection \<open>4.4.7 Advanced Rule Induction\<close>
 
 thm ev.inducts
+(* Isabelle generates the induction rule for ev:
+  ev n    P(0)    \<forall>x. ev x \<Longrightarrow> P(x) \<Longrightarrow> P(Suc(Suc(x)))
+--------------------------------------------------------
+                   P(n)
+*)
+
+thm ev.cases
 
 lemma "ev (Suc m) \<Longrightarrow> \<not> ev m"
+(* proof (induction rule: ev.inducts) *)
+  \<comment> \<open>goal (2 subgoals):
+       1. \<not> ev m
+       2. \<And>ma. ev ma \<Longrightarrow> \<not> ev m \<Longrightarrow> \<not> ev m \<close>
+  \<comment> \<open>In order to apply the induction, need n := (Suc m),
+      while in the target "\<not> ev m", there is no appearance of (Suc m),
+      but we need P(Suc m) = \<not> ev m. There are multiple choices:
+      1. P = \<lambda>x. \<not> ev m  (constant)
+      2. P = \<lambda>x. (x = Suc m \<longrightarrow> \<not> ev m)
+      3. P = \<lambda>x. \<not> ev (x - 1)
+      ...
+      But Isabelle picks the first - constant one by default
+      Then subgoal 1 is just P(0), subgoal 2 is the 3rd premise with P = \<lambda>x. \<not> ev m
+      - both weird and cannot be proved\<close>
 proof (induction "Suc m" arbitrary: m rule: ev.induct)
   \<comment> \<open>goal (1 subgoal):
        1. \<And>m. ev m \<Longrightarrow> (\<And>ma. m = Suc ma \<Longrightarrow> \<not> ev ma) \<Longrightarrow> \<not> ev (Suc m)\<close>
-  fix n assume IH: "\<And>m. n = Suc m \<Longrightarrow> \<not> ev m"
-  show "\<not> ev (Suc n)"
+  case ev0
+    \<comment> \<open>case doesn't exist cuz 0 \<noteq> Suc ma\<close>
+next
+  case (evSS n)
+  show ?case
   proof
     assume "ev (Suc n)"
     thus False
-    proof cases
-      fix k assume "n = Suc k" "ev k"
-      thus False using IH by auto
+    proof cases  \<comment> \<open>rule inversion for ev (Suc n)\<close>
+      case ev0
+    next
+      case (evSS k)  \<comment> \<open>n = Suc k and ev k\<close>
+        \<comment> \<open>this:
+              n = Suc k
+              ev k\<close>
+      with evSS.hyps show False by auto
+        \<comment> \<open>picking this:
+              ev n
+              n = Suc ?m \<Longrightarrow> \<not> ev ?m\<close>
     qed
   qed
 qed
