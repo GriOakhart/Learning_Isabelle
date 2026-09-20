@@ -305,4 +305,19 @@ lemma sim_while_cong_aux:
   apply (blast)
   done
 
+(* INCORRECT:
+definition equivalence :: "'a \<Rightarrow> 'a \<Rightarrow> bool" where
+  "equivalence x x"
+& "equivalence x y \<Longrightarrow> equivalence y x"
+& "equivalence x y \<Longrightarrow> equivalence y z \<Longrightarrow> equivalence x z" *)
+definition equiv :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
+  "equiv R \<longleftrightarrow> (\<forall> x y z. (R x x) \<and> (R x y \<longrightarrow> R y x) \<and> (R x y \<longrightarrow> R y z \<longrightarrow> R x z))"
+
+lemma "equiv (\<sim>)"
+  apply (simp add: equiv_def)
+    \<comment> \<open>@{text "\<sim>"} is pointwise HOL equality of big-step predicates,
+        so the three conjuncts are refl / sym / trans of @{text "="}.
+        @{method simp} already finishes --- no remaining subgoal for @{method auto}.\<close>
+  done
+
 end
