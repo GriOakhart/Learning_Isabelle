@@ -357,7 +357,69 @@ lemma "\<lbrakk>(c, s) \<Rightarrow> t; (c, s) \<Rightarrow> t'\<rbrakk> \<Longr
           @{text IfFalse} is the next subgoal.\<close>
     apply (erule IfE, blast, simp)
    apply (erule WhileE, simp, blast)
-  apply (erule WhileE)
+  apply (erule WhileE, blast, simp)
+  done
 
+lemma "\<lbrakk>(c, s) \<Rightarrow> t; (c, s) \<Rightarrow> t'\<rbrakk> \<Longrightarrow> t = t'"
+  apply (induction arbitrary: t' rule: big_step.inducts)
+        apply (metis SkipE AssignE SeqE IfE WhileE)+
+          \<comment> \<open>@{method metis} ignores the claset, so @{text SkipE}
+              is named even though it is @{text "[elim!]"}.
+              @{command "done"} closes the proof.\<close>
+  done
+
+lemma "\<lbrakk>(c, s) \<Rightarrow> t; (c, s) \<Rightarrow> t'\<rbrakk> \<Longrightarrow> t = t'"
+  apply (induction arbitrary: t' rule: big_step.inducts)
+  by (blast elim: AssignE SeqE IfE WhileE)+
+    \<comment> \<open>@{method blast} uses the claset, so @{text SkipE} is already
+        found. @{command "by"} runs the method and closes the proof.\<close>
+
+text \<open>
+  @{text WhileTrue} written out: premises, two IHs, then @{text "t = t'"}.
+  @{method blast} closes the other six cases.
+\<close>
+theorem "(c, s) \<Rightarrow> t \<Longrightarrow> (c, s) \<Rightarrow> t' \<Longrightarrow> t = t'"
+proof (induction arbitrary: t' rule: big_step.induct)
+\<comment> \<open>7. \<And>b stk1 com stk2 stk3 t'.
+           bval b stk1 \<Longrightarrow>
+           (com, stk1) \<Rightarrow> stk2 \<Longrightarrow>
+           (\<And>t'. (com, stk1) \<Rightarrow> t' \<Longrightarrow> stk2 = t') \<Longrightarrow>
+           (WHILE b DO com, stk2) \<Rightarrow> stk3 \<Longrightarrow>
+           (\<And>t'. (WHILE b DO com, stk2) \<Rightarrow> t' \<Longrightarrow> stk3 = t') \<Longrightarrow>
+           (WHILE b DO com, stk1) \<Rightarrow> t' \<Longrightarrow>
+            stk3 = t' \<close>
+  fix b c s s_1 t t'
+  assume "bval b s" and "(c, s) \<Rightarrow> s_1" and "(WHILE b DO c, s_1) \<Rightarrow> t"
+  assume IHc: "\<And>t'. (c,s) \<Rightarrow> t' \<Longrightarrow> s_1 = t'"
+  assume IHw: "\<And>t'. (WHILE b DO c, s_1) \<Rightarrow> t' \<Longrightarrow> t = t'"
+  assume "(WHILE b DO c, s) \<Rightarrow> t'"
+  with \<open>bval b s\<close> obtain s_1' where
+    c: "(c, s) \<Rightarrow> s_1'" and
+    w: "(WHILE b DO c, s_1') \<Rightarrow>t'"
+    by (auto elim: WhileE)
+  from c IHc have "s_1' = s_1" by blast
+  with w IHw show "t = t'" by blast
+qed (blast elim: AssignE SeqE IfE WhileE)+
+
+text \<open>
+  @{command "case"} names those same facts. @{command obtain} unfolds the
+  second @{text WHILE}; @{text WhileTrue.IH} lines the states up.
+\<close>
+theorem "(c, s) \<Rightarrow> t \<Longrightarrow> (c, s) \<Rightarrow> t' \<Longrightarrow> t = t'"
+proof (induction arbitrary: t' rule: big_step.inducts)
+  case (WhileTrue b stk1 com stk2 stk3)
+    \<comment> \<open>this:
+     -->  bval b stk1
+          (com, stk1) \<Rightarrow> stk2
+          (WHILE b DO com, stk2) \<Rightarrow> stk3
+          (com, stk1) \<Rightarrow> ?t' \<Longrightarrow> stk2 = ?t'
+          (WHILE b DO com, stk2) \<Rightarrow> ?t' \<Longrightarrow> stk3 = ?t'
+     -->  (WHILE b DO com, stk1) \<Rightarrow> t'\<close>
+  from \<open>(WHILE b DO com, stk1) \<Rightarrow> t'\<close> \<open>bval b stk1\<close> obtain stk where
+    \<comment> \<open>unfold WHILE-DO one time\<close>
+    "(com, stk1) \<Rightarrow> stk" and "(WHILE b DO com, stk) \<Rightarrow> t'"
+    by (auto elim: WhileE)
+  with WhileTrue.IH show ?case by auto
+qed (blast elim: AssignE SeqE IfE WhileE)+
 
 end
