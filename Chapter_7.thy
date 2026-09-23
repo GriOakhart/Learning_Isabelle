@@ -305,6 +305,9 @@ lemma sim_while_cong_aux:
   apply (blast)
   done
 
+lemma "c \<sim> c' \<Longrightarrow> WHILE b DO c \<sim> WHILE b DO c'"
+  by (metis sim_while_cong_aux)
+
 (* INCORRECT:
 definition equivalence :: "'a \<Rightarrow> 'a \<Rightarrow> bool" where
   "equivalence x x"
@@ -319,5 +322,42 @@ lemma "equiv (\<sim>)"
         so the three conjuncts are refl / sym / trans of @{text "="}.
         @{method simp} already finishes --- no remaining subgoal for @{method auto}.\<close>
   done
+
+section \<open>7.2.5 Execution in IMP is Deterministic\<close>
+
+inductive_cases AssignE: "(x ::= a, s) \<Rightarrow> t"
+text \<open>
+  IMP is deterministic:
+  a language is deterministic if any two executions of the same command
+  from the same initial state will always arrive in the same final state\<close>
+lemma "\<lbrakk>(c, s) \<Rightarrow> t; (c, s) \<Rightarrow> t'\<rbrakk> \<Longrightarrow> t = t'"
+  \<comment> \<open>Induct on the first derivation. @{text "arbitrary: t'"} keeps the
+      other final state open, so each IH applies to any second result
+      of the same sub-command.
+      The case fixes the command shape. @{method blast} inverts
+      @{text "(c, s) \<Rightarrow> t'"} with the matching @{text E} rule and the
+      IH identifies the intermediate states, hence @{text "t = t'"}.
+      @{text SkipE} is already @{text "[elim!]"}. The other four are
+      not in the claset, so this call names them.
+      @{text WhileE} stays off @{text "[elim!]"}: a @{text WhileTrue}
+      premise is another @{text WHILE}, and an eager elim loops.\<close>
+  by (induction arbitrary: t' rule: big_step.inducts)
+     (blast elim: AssignE SeqE IfE WhileE)+
+
+lemma "\<lbrakk>(c, s) \<Rightarrow> t; (c, s) \<Rightarrow> t'\<rbrakk> \<Longrightarrow> t = t'"
+  apply (induction arbitrary: t' rule: big_step.inducts)
+        apply (erule SkipE, simp)
+       apply (erule AssignE, simp)
+      apply (erule SeqE, simp)
+     apply (erule IfE, simp, blast)
+      \<comment> \<open>@{text IfTrue} only. @{method simp} finishes the second run's
+          true arm: the IH rewrites @{text "t = t'"}.
+          The false arm ran @{text com2}, so that IH gives no equation;
+          @{method blast} uses @{text "bval b s"} against @{text "\<not> bval b s"}.
+          @{text IfFalse} is the next subgoal.\<close>
+    apply (erule IfE, blast, simp)
+   apply (erule WhileE, simp, blast)
+  apply (erule WhileE)
+
 
 end
