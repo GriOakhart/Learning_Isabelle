@@ -422,4 +422,19 @@ proof (induction arbitrary: t' rule: big_step.inducts)
   with WhileTrue.IH show ?case by auto
 qed (blast elim: AssignE SeqE IfE WhileE)+
 
+section \<open>Small-Step Semantics\<close>
+
+inductive small_step :: "com \<times> state \<Rightarrow> com \<times> state \<Rightarrow> bool" (infix "\<rightarrow>" 55)  where
+(*Skip:
+    SKIP represents the terminated program *)
+  Assign: "(x ::= e, s) \<rightarrow> (SKIP, s (x := aval e s))"  \<comment> \<open>an atomic step\<close>
+| Seq1: "(SKIP;; c2, s) \<rightarrow> (c2, s)"
+    \<comment> \<open>the execution of the first part already terminated\<close>
+| Seq2: "(c1, s) \<rightarrow> (c1', s') \<Longrightarrow> (c1;; c2, s) \<rightarrow> (c1';; c2, s')"
+    \<comment> \<open>first part does not end, so continue one step in the first part\<close>
+| IfTrue: "bval b s \<Longrightarrow> (IF b THEN c1 ELSE c2, s) \<rightarrow> (c1, s)"
+    \<comment> \<open>evaluating b has no side effects, so the step only selects a branch and s stays unchanged\<close>
+| IfFalse: "\<not> bval b s \<Longrightarrow> (IF b THEN c1 ELSE c2, s) \<rightarrow> (c2, s)"
+| While: "(WHILE b DO c, s) \<rightarrow> (IF b THEN (c;; WHILE b DO c) ELSE SKIP, s)"
+    \<comment> \<open>just unfold WHILE-DO loop one time\<close>
 end
