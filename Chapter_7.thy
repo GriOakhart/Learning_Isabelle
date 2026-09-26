@@ -82,7 +82,8 @@ inductive big_step :: "com \<times> state \<Rightarrow> state \<Rightarrow> bool
 | IfFalse: "\<lbrakk>\<not> bval b s; (com2, s) \<Rightarrow> t\<rbrakk> \<Longrightarrow> (IF b THEN com1 ELSE com2, s) \<Rightarrow> t"
 | WhileFalse: "(\<not> bval b s) \<Longrightarrow> (WHILE b DO com, s) \<Rightarrow> s"
   \<comment> \<open>the loop body is just skipped\<close>
-| WhileTrue: "\<lbrakk>bval b stk1; (com, stk1) \<Rightarrow> stk2; (WHILE b DO com, stk2) \<Rightarrow> stk3\<rbrakk> \<Longrightarrow> (WHILE b DO com, stk1) \<Rightarrow> stk3"
+| WhileTrue: "\<lbrakk>bval b stk1; (com, stk1) \<Rightarrow> stk2; (WHILE b DO com, stk2) \<Rightarrow> stk3\<rbrakk> \<Longrightarrow>
+                (WHILE b DO com, stk1) \<Rightarrow> stk3"
   \<comment> \<open>one more iteration: if b holds at stk1, prepend a body run
       stk1 \<Rightarrow> stk2 to a remaining loop from stk2. b is not retested here;
       the recursive WHILE premise does that (False or True again).\<close>
@@ -433,8 +434,41 @@ inductive small_step :: "com \<times> state \<Rightarrow> com \<times> state \<R
 | Seq2: "(c1, s) \<rightarrow> (c1', s') \<Longrightarrow> (c1;; c2, s) \<rightarrow> (c1';; c2, s')"
     \<comment> \<open>first part does not end, so continue one step in the first part\<close>
 | IfTrue: "bval b s \<Longrightarrow> (IF b THEN c1 ELSE c2, s) \<rightarrow> (c1, s)"
-    \<comment> \<open>evaluating b has no side effects, so the step only selects a branch and s stays unchanged\<close>
+    \<comment> \<open>evaluating b has no side effects,
+        so the step only selects a branch and s stays unchanged\<close>
 | IfFalse: "\<not> bval b s \<Longrightarrow> (IF b THEN c1 ELSE c2, s) \<rightarrow> (c2, s)"
 | While: "(WHILE b DO c, s) \<rightarrow> (IF b THEN (c;; WHILE b DO c) ELSE SKIP, s)"
     \<comment> \<open>just unfold WHILE-DO loop one time\<close>
+
+(* definition from section 3.5.2: *)
+inductive star :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for f where
+  refl: "star f x x"
+| step: "f x y \<Longrightarrow> star f y z \<Longrightarrow> star f x z"
+text \<open>
+  define the execution of a program as the
+  reflexive transitive closure of the small_step judgement \<rightarrow>:
+  the book prints only the notation; Isabelle needs the
+  constant name, type, and mixfix (infix "\<rightarrow>\<star>" 55).\<close>
+abbreviation small_steps :: "com \<times> state \<Rightarrow> com \<times> state \<Rightarrow> bool" (infix "\<rightarrow>\<star>" 55) where
+  "x \<rightarrow>\<star> y \<equiv> star small_step x y"
+
+code_pred star .
+code_pred small_step .
+  \<comment> \<open>turn the inductive predicates into executable code,
+      so that @{command values} can enumerate their solutions;
+      star comes first because small_steps is built on it\<close>
+
+values "{(c', map s' [''x'', ''y'', ''z'']) | c' s'.
+  \<comment> \<open>a state s' is a function, which cannot be printed;
+      map s' [...] turns it into the list of values of x, y, z\<close>
+  (''x'' ::= V ''z'';; ''y'' ::= V ''x'',
+   (\<lambda>_. 0)(''x'' := 3, ''y'' := 7, ''z'' := 5)) \<rightarrow>\<star> (c', s')}"
+  \<comment> \<open>f(a := b, c := d) is sugar for fun_upd (fun_upd f a b) c d\<close>
+
+thm small_step.cases
+lemma "\<lbrakk>cs \<rightarrow> cs'; cs \<rightarrow> cs''\<rbrakk> \<Longrightarrow> cs' = cs''"
+  apply (induction arbitrary: cs'' rule: small_step.inducts)
+       apply (blast elim: small_step.cases)+
+  done
+
 end
