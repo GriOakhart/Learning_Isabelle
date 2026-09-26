@@ -466,9 +466,22 @@ values "{(c', map s' [''x'', ''y'', ''z'']) | c' s'.
   \<comment> \<open>f(a := b, c := d) is sugar for fun_upd (fun_upd f a b) c d\<close>
 
 thm small_step.cases
+inductive_cases small_step_SkipE: "(SKIP, s) \<rightarrow> cs"
+  \<comment> \<open>inversion of an impossible step: SKIP is stuck, so
+      @{text "(SKIP, s) \<rightarrow> cs \<Longrightarrow> P"}. Needed to kill @{text SeqE}'s
+      @{text Seq2} arm when the first command is SKIP.\<close>
+inductive_cases small_step_AssignE: "(x ::= e, s) \<rightarrow> cs"
+inductive_cases small_step_SeqE: "(c1;; c2, s) \<rightarrow> cs"
+inductive_cases small_step_IfE: "(IF b THEN c1 ELSE c2, s) \<rightarrow> cs"
+inductive_cases small_step_WhileE: "(WHILE b DO c, s) \<rightarrow> cs"
 lemma "\<lbrakk>cs \<rightarrow> cs'; cs \<rightarrow> cs''\<rbrakk> \<Longrightarrow> cs' = cs''"
   apply (induction arbitrary: cs'' rule: small_step.inducts)
-       apply (blast elim: small_step.cases)+
+       (* apply (blast elim: small_step.cases)+  \<comment> \<open>this also works\<close> *)
+       apply (blast elim: small_step_SkipE
+                          small_step_AssignE
+                          small_step_SeqE
+                          small_step_IfE
+                          small_step_WhileE)+
   done
 
 end
